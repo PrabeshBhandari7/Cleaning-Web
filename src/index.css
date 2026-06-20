@@ -1,0 +1,30 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-green: #085f56;
+  --color-brand-green-hover: #064c45;
+  --color-brand-orange: #ff724c;
+  --color-brand-orange-hover: #e65c36;
+  --color-brand-bg: #f9faf8;
+  --color-brand-card: #ffffff;
+  --color-brand-text: #334155;
+  --color-brand-border: #e2e8f0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-brand-bg);
+  color: var(--color-brand-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+}
