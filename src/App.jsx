@@ -551,6 +551,131 @@ function App() {
     }
   };
 
+  const handleToggleActiveState = async (serviceId, currentActiveState) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentActiveState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchServices(); // Refresh active services
+      } else {
+        alert(data.message || 'Failed to toggle listing state.');
+      }
+    } catch (error) {
+      console.error('Error toggling active state:', error);
+    }
+  };
+
+  const handleAddMockBooking = async () => {
+    const names = ['Sarah Jenkins', 'Marcus Thorne', 'Elena Rodriguez', 'Jordan Smith', 'Maria Alvez', 'Robert King', 'Lisa Wong'];
+    const selectedName = names[Math.floor(Math.random() * names.length)];
+    const servicesList = services.map(s => s.id);
+    const serviceType = servicesList[Math.floor(Math.random() * servicesList.length)] || 'deep';
+    const randomPrice = Math.floor(Math.random() * 300) + 100;
+    const date = `2026-06-${Math.floor(Math.random() * 10) + 20}`;
+    
+    try {
+      const res = await fetch('http://localhost:5000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: selectedName,
+          email: `${selectedName.toLowerCase().replace(' ', '')}@example.com`,
+          serviceType: serviceType,
+          size: '2-3bed',
+          frequency: 'weekly',
+          totalPrice: randomPrice,
+          status: 'confirmed',
+          date: date,
+          cleaner: 'Staff Allocated'
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchBookings();
+        alert('Mock Booking added successfully!');
+      } else {
+        alert(data.message || 'Failed to add mock booking.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error adding mock booking.');
+    }
+  };
+
+  const handleUpdateBooking = async (bookingId, updatedData) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchBookings();
+        return true;
+      } else {
+        alert(data.message || 'Failed to update booking.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      alert('Network error updating booking.');
+      return false;
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchBookings();
+        return true;
+      } else {
+        alert(data.message || 'Failed to delete booking.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      alert('Network error deleting booking.');
+      return false;
+    }
+  };
+
+  const handleEditServiceSubmit = async (serviceId, updatedData) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchServices();
+        alert('Listing updated successfully!');
+      } else {
+        alert(data.message || 'Failed to update listing.');
+      }
+    } catch (error) {
+      console.error('Error updating service:', error);
+      alert('Network error updating listing.');
+    }
+  };
+
   // Admin function: Delete a service type (Backend Connected)
   const handleDeleteService = async (serviceId) => {
     if (services.length <= 1) {
@@ -727,23 +852,36 @@ function App() {
 
       {/* Admin Dashboard Overlay */}
       {showAdminDashboard && (
-        <AdminDashboard 
-          setShowAdminDashboard={setShowAdminDashboard}
-          adminActiveTab={adminActiveTab}
-          setAdminActiveTab={setAdminActiveTab}
+        <AdminDashboard
+          onClose={() => setShowAdminDashboard(false)}
+          activeTab={adminActiveTab}
+          setActiveTab={setAdminActiveTab}
           bookings={bookings}
           services={services}
-          handleDeleteService={handleDeleteService}
-          handleUpdatePrice={handleUpdatePrice}
-          handleSavePrice={handleSavePrice}
+          formatPrice={formatPrice}
+          currency={currency}
+          setCurrency={setCurrency}
+          onLogout={() => {
+            setIsAdminLoggedIn(false);
+            setShowAdminDashboard(false);
+          }}
+          onToggleActiveState={handleToggleActiveState}
+          onAddMockBooking={handleAddMockBooking}
+          onUpdateBooking={handleUpdateBooking}
+          onDeleteBooking={handleDeleteBooking}
+          onEditServiceSubmit={handleEditServiceSubmit}
+          onUpdatePrice={handleUpdatePrice}
+          onSavePrice={handleSavePrice}
+          onDeleteService={handleDeleteService}
           newService={newService}
           setNewService={setNewService}
           photoSourceType={photoSourceType}
           setPhotoSourceType={setPhotoSourceType}
           uploadedBase64={uploadedBase64}
-          handlePhotoUpload={handlePhotoUpload}
-          handleAddServiceSubmit={handleAddServiceSubmit}
-          formatPrice={formatPrice}
+          setUploadedBase64={setUploadedBase64}
+          fileInputRef={fileInputRef}
+          onPhotoUpload={handlePhotoUpload}
+          onAddServiceSubmit={handleAddServiceSubmit}
         />
       )}
 

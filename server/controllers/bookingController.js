@@ -90,3 +90,54 @@ exports.createBooking = (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// @desc    Update a booking details (status, cleaner)
+// @route   PUT /api/bookings/:id
+// @access  Private (Admin only simulation)
+exports.updateBooking = (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, cleaner } = req.body;
+
+    const bookingIndex = mockDatabase.bookings.findIndex((b) => (b.id || b._id) === id);
+
+    if (bookingIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Booking not found.' });
+    }
+
+    if (status !== undefined) {
+      mockDatabase.bookings[bookingIndex].status = status;
+    }
+    if (cleaner !== undefined) {
+      mockDatabase.bookings[bookingIndex].cleaner = cleaner;
+    }
+
+    saveBookingsToFile();
+
+    res.status(200).json({ success: true, data: mockDatabase.bookings[bookingIndex] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// @desc    Delete a booking
+// @route   DELETE /api/bookings/:id
+// @access  Private (Admin only simulation)
+exports.deleteBooking = (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const bookingIndex = mockDatabase.bookings.findIndex((b) => (b.id || b._id) === id);
+
+    if (bookingIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Booking not found.' });
+    }
+
+    mockDatabase.bookings.splice(bookingIndex, 1);
+    saveBookingsToFile();
+
+    res.status(200).json({ success: true, message: 'Booking deleted successfully.' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

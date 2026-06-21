@@ -1,174 +1,161 @@
 import { 
-  Sliders, 
-  Briefcase, 
-  Plus, 
-  Calendar, 
-  LogOut, 
-  ChevronDown, 
-  Users, 
-  BarChart2, 
-  Settings, 
-  Target,
+  LayoutGrid, 
+  ListTodo, 
+  CalendarDays, 
+  Coins, 
+  LogOut,
   Sparkles,
-  Inbox
+  X
 } from 'lucide-react';
 
-export default function Sidebar({ activeTab, setActiveTab, onLogout }) {
+export default function Sidebar({ activeTab, setActiveTab, onLogout, onClose, currency, setCurrency }) {
   const menuItems = [
-    { id: 'overview', label: 'Dashboard', icon: Sliders },
-    { id: 'services', label: 'Active Services', icon: Briefcase },
-    { id: 'add-service', label: 'Add Service', icon: Plus },
-    { id: 'bookings', label: 'Bookings Log', icon: Calendar },
-  ];
-
-  const dummyMenuItems = [
-    { label: 'Customers', icon: Users },
-    { label: 'Campaigns', icon: Target },
-    { label: 'Inbox', icon: Inbox },
-    { label: 'Analytics', icon: BarChart2 },
-    { label: 'Settings', icon: Settings },
+    { id: 'overview', label: 'Dashboard', icon: LayoutGrid },
+    { id: 'services', label: 'Listings', icon: ListTodo },
+    { id: 'bookings', label: 'Bookings', icon: CalendarDays },
+    { id: 'rates', label: 'Rates', icon: Coins },
   ];
 
   return (
-    <div className="flex shrink-0 h-full">
-      {/* 1. MINI LEFT SIDEBAR (Dark Blue Toolbar) */}
-      <aside className="w-16 bg-[#0c2a52] flex flex-col justify-between items-center py-6 border-r border-[#ffffff]/10 shrink-0">
-        <div className="flex flex-col gap-6 items-center w-full">
-          {/* Logo Circle */}
-          <div className="w-9 h-9 rounded-xl bg-cyan-400/20 text-cyan-300 flex items-center justify-center font-display font-black text-lg shadow-lg">
-            C
-          </div>
-
-          {/* Vertical Menu Icons */}
-          <div className="flex flex-col gap-4 items-center w-full pt-6">
-            <button 
-              onClick={() => setActiveTab('overview')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                activeTab === 'overview' ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Sliders className="w-4.5 h-4.5" />
-            </button>
-            <button 
-              onClick={() => setActiveTab('bookings')}
-              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                activeTab === 'bookings' ? 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/20' : 'text-slate-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Calendar className="w-4.5 h-4.5" />
-            </button>
-            <button 
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-              title="Customers (View Mode)"
-            >
-              <Users className="w-4.5 h-4.5" />
-            </button>
-            <button 
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-              title="Analytics (View Mode)"
-            >
-              <BarChart2 className="w-4.5 h-4.5" />
-            </button>
-            <button 
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/5 transition-all"
-              title="System Settings"
-            >
-              <Settings className="w-4.5 h-4.5" />
-            </button>
-          </div>
-        </div>
-
-        {/* Bottom Expand Arrow */}
-        <div className="text-slate-400 hover:text-white cursor-pointer p-1">
-          <ChevronDown className="w-5 h-5 rotate-180" />
-        </div>
-      </aside>
-
-      {/* 2. INNER GLASS SIDEBAR (Lighter Blue/Glass Panel) */}
-      <aside className="w-56 bg-white/45 backdrop-blur-md border-r border-white/20 flex flex-col justify-between p-6 shrink-0">
+    <>
+      {/* 1. DESKTOP SIDEBAR (Visible on md and larger viewports) */}
+      <aside className="hidden md:flex w-64 bg-white border-r border-slate-100 flex-col justify-between shrink-0 p-6">
         <div className="space-y-8">
           {/* Header Brand */}
-          <div className="flex items-center gap-2.5">
-            <span className="font-display font-black text-xl tracking-wide text-slate-800 uppercase">
-              CCRM
-            </span>
-            <span className="text-[10px] text-cyan-600 bg-cyan-100/50 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wide">
-              Pro
+          <div className="flex items-center gap-2.5 px-2">
+            <div className="w-8 h-8 rounded-xl bg-brand-green flex items-center justify-center text-white font-display font-black text-sm">
+              M
+            </div>
+            <span className="font-display font-black text-lg tracking-wide text-slate-800 uppercase">
+              Management
             </span>
           </div>
 
-          {/* Active Navigation List */}
-          <div className="space-y-5">
-            <div>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-2 px-3">
-                Main Control
-              </span>
-              <nav className="flex flex-col gap-1 text-xs font-semibold text-slate-500">
-                {menuItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left cursor-pointer ${
-                        activeTab === item.id
-                          ? 'bg-white/90 text-[#085f56] shadow-md border border-white/40 font-bold'
-                          : 'hover:bg-white/40 hover:text-slate-800'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-
-            {/* Decorative items to match the reference mockup style */}
-            <div>
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block mb-2 px-3">
-                CRM Modules
-              </span>
-              <nav className="flex flex-col gap-1 text-xs font-semibold text-slate-400/80">
-                {dummyMenuItems.map((item, idx) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-left cursor-not-allowed hover:text-slate-600 transition-colors"
-                      title={`${item.label} feature integrates with your CRM API`}
-                    >
-                      <Icon className="w-4 h-4 text-slate-400/60" />
-                      <span>{item.label}</span>
-                    </div>
-                  );
-                })}
-              </nav>
-            </div>
+          {/* Navigation Items */}
+          <div className="space-y-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-3">
+              Console Menu
+            </span>
+            <nav className="flex flex-col gap-1.5 text-xs font-bold text-slate-500">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                    }}
+                    className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all text-left cursor-pointer ${
+                      isActive
+                        ? 'bg-brand-green/5 text-brand-green shadow-sm border border-brand-green/10'
+                        : 'hover:bg-slate-50 hover:text-slate-800'
+                    }`}
+                  >
+                    <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-brand-green' : 'text-slate-400'}`} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
           </div>
         </div>
 
-        {/* Profile Card at bottom of sidebar */}
-        <div className="border-t border-slate-200/50 pt-4 flex items-center justify-between">
+        {/* Currency Switcher */}
+        <div className="border-t border-slate-100 pt-4 mt-auto mb-4 px-2">
+          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2.5">
+            Console Currency
+          </span>
+          <div className="flex gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-100">
+            <button
+              onClick={() => setCurrency('USD')}
+              className={`flex-1 py-1.5 text-center text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                currency === 'USD'
+                  ? 'bg-white text-brand-green shadow-sm border border-slate-100'
+                  : 'text-slate-400 hover:text-slate-700'
+              }`}
+            >
+              USD ($)
+            </button>
+            <button
+              onClick={() => setCurrency('AED')}
+              className={`flex-1 py-1.5 text-center text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                currency === 'AED'
+                  ? 'bg-white text-brand-green shadow-sm border border-slate-100'
+                  : 'text-slate-400 hover:text-slate-700'
+              }`}
+            >
+              AED (د.إ)
+            </button>
+          </div>
+        </div>
+
+        {/* Profile / Logout section */}
+        <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#085f56] border border-white/20 text-white font-extrabold text-xs flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 rounded-full bg-brand-green text-white font-extrabold text-xs flex items-center justify-center shadow-md">
               AD
             </div>
             <div>
               <h5 className="font-bold text-xs text-slate-800 leading-tight">
                 Admin Manager
               </h5>
-              <button
-                onClick={onLogout}
-                className="flex items-center gap-1 text-[10px] text-slate-400 font-semibold hover:text-red-500 transition-colors uppercase tracking-wider"
-              >
-                <LogOut className="w-3 h-3" />
-                <span>Log out</span>
-              </button>
+              <div className="flex items-center gap-2 mt-1">
+                <button
+                  onClick={onLogout}
+                  className="flex items-center gap-1 text-[10px] text-slate-400 font-bold hover:text-red-500 transition-colors uppercase tracking-wider cursor-pointer"
+                >
+                  <LogOut className="w-3 h-3" />
+                  <span>Logout</span>
+                </button>
+                <span className="text-[10px] text-slate-200 font-bold">|</span>
+                <button
+                  onClick={onClose}
+                  className="text-[10px] text-slate-400 font-bold hover:text-brand-green transition-colors uppercase tracking-wider cursor-pointer"
+                >
+                  <span>Exit</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </aside>
-    </div>
+
+      {/* 2. MOBILE BOTTOM NAVIGATION (Visible on mobile/tablet viewports) */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 h-16 flex items-center justify-around px-4 shadow-[0_-5px_15px_rgba(0,0,0,0.03)]">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => {
+                setActiveTab(item.id);
+              }}
+              className="flex flex-col items-center justify-center gap-1 flex-1 py-1 text-center cursor-pointer"
+            >
+              <div className={`p-1.5 rounded-full transition-all ${isActive ? 'bg-brand-green/5 text-brand-green' : 'text-slate-400'}`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <span className={`text-[9px] font-bold ${isActive ? 'text-brand-green' : 'text-slate-400'}`}>
+                {item.label}
+              </span>
+            </button>
+          );
+        })}
+        {/* Mobile Exit Button */}
+        <button
+          onClick={onClose}
+          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 text-center cursor-pointer text-slate-400 hover:text-brand-green"
+        >
+          <div className="p-1.5 rounded-full transition-all text-slate-400 hover:bg-brand-green/5 hover:text-brand-green">
+            <X className="w-5 h-5" />
+          </div>
+          <span className="text-[9px] font-bold">
+            Exit
+          </span>
+        </button>
+      </nav>
+    </>
   );
 }
