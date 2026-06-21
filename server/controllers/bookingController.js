@@ -1,6 +1,24 @@
-const { mockDatabase, saveBookingsToFile } = require('../config/db');
+const { getSupabase } = require('../config/db');
 
-// @desc    Calculate instant cleaning quote
+// ─── Helper: map Supabase row → API response shape ───────────────────────────
+const mapBooking = (row) => ({
+  id:           row.id,
+  name:         row.name,
+  email:        row.email,
+  phone:        row.phone,
+  serviceType:  row.service_type,
+  propertyType: row.property_type,
+  size:         row.size,
+  frequency:    row.frequency,
+  totalPrice:   row.total_price,
+  status:       row.status,
+  message:      row.message,
+  addons:       row.addons || [],
+  cleaner:      row.cleaner,
+  date:         row.date,
+});
+
+// @desc    Calculate instant cleaning quote (no DB needed)
 // @route   POST /api/bookings/quote
 // @access  Public
 exports.calculateQuote = (req, res) => {
@@ -11,36 +29,28 @@ exports.calculateQuote = (req, res) => {
       return res.status(400).json({ success: false, message: 'Square footage is required.' });
     }
 
-    let baseRate = 0.08; // $0.08 per sqft for standard
+    let baseRate = 0.08;
     if (cleaningType === 'deep') baseRate = 0.12;
     if (cleaningType === 'moveout') baseRate = 0.15;
 
     let subtotal = squareFootage * baseRate;
 
-    // Addon flat rates
-    if (addons.windows) subtotal += 45;
-    if (addons.fridge) subtotal += 30;
-    if (addons.oven) subtotal += 35;
-    if (addons.cabinets) subtotal += 40;
+    if (addons.windows)    subtotal += 45;
+    if (addons.fridge)     subtotal += 30;
+    if (addons.oven)       subtotal += 35;
+    if (addons.cabinets)   subtotal += 40;
     if (addons.ecoFriendly) subtotal += 15;
 
-    // Frequency discounts
     let discount = 1;
-    if (frequency === 'weekly') discount = 0.8;
-    if (frequency === 'biweekly') discount = 0.85;
-    if (frequency === 'monthly') discount = 0.9;
+    if (frequency === 'weekly')    discount = 0.8;
+    if (frequency === 'biweekly')  discount = 0.85;
+    if (frequency === 'monthly')   discount = 0.9;
 
     const totalPrice = Math.round(subtotal * discount);
 
     res.status(200).json({
       success: true,
-      data: {
-        squareFootage,
-        cleaningType,
-        frequency,
-        addons,
-        totalPrice,
-      },
+      data: { squareFootage, cleaningType, frequency, addons, totalPrice },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -50,12 +60,20 @@ exports.calculateQuote = (req, res) => {
 // @desc    Get all bookings
 // @route   GET /api/bookings
 // @access  Public
-exports.getBookings = (req, res) => {
+exports.getBookings = async (req, res) => {
   try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
     res.status(200).json({
       success: true,
-      count: mockDatabase.bookings.length,
-      data: mockDatabase.bookings,
+      count: data.length,
+      data: data.map(mapBooking),
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -65,56 +83,74 @@ exports.getBookings = (req, res) => {
 // @desc    Create new booking
 // @route   POST /api/bookings
 // @access  Public
-exports.createBooking = (req, res) => {
+exports.createBooking = async (req, res) => {
   try {
-    const { name, email, serviceType, size, frequency, totalPrice, squareFootage, cleaningType, addons } = req.body;
+    const supabase = getSupabase();
+    const {
+      name, email, phone, serviceType, propertyType,
+      size, frequency, totalPrice, message, addons,
+      squareFootage, cleaningType,
+    } = req.body;
 
-    const newBooking = {
-      id: `CW-${Math.floor(10000 + Math.random() * 90000)}`,
-      name: name || 'Walk-in Customer',
-      email: email || 'walkin@cleaning.web',
-      serviceType: serviceType || cleaningType || 'deep',
-      size: size || (squareFootage ? `${squareFootage} sqft` : 'medium'),
-      frequency: frequency || 'once',
-      totalPrice: Number(totalPrice) || 120,
-      status: 'scheduled',
-      date: new Date().toISOString().split('T')[0],
-      cleaner: 'Sarah Jenkins (⭐️ 4.95)',
-    };
+    const newId = `CW-${Math.floor(10000 + Math.random() * 90000)}`;
 
-    mockDatabase.bookings.push(newBooking);
-    saveBookingsToFile();
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert([{
+        id:            newId,
+        name:          name || 'Walk-in Customer',
+        email:         email || 'walkin@cleaning.web',
+        phone:         phone || '',
+        service_type:  serviceType || cleaningType || 'deep',
+        property_type: propertyType || '',
+        size:          size || (squareFootage ? `${squareFootage} sqft` : 'medium'),
+        frequency:     frequency || 'once',
+        total_price:   Number(totalPrice) || 120,
+        status:        'scheduled',
+        message:       message || '',
+        addons:        addons || [],
+        cleaner:       'Staff Allocated',
+        date:          new Date().toISOString().split('T')[0],
+      }])
+      .select()
+      .single();
 
-    res.status(201).json({ success: true, data: newBooking });
+    if (error) throw error;
+
+    res.status(201).json({ success: true, data: mapBooking(data) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// @desc    Update a booking details (status, cleaner)
+// @desc    Update a booking (status, cleaner)
 // @route   PUT /api/bookings/:id
-// @access  Private (Admin only simulation)
-exports.updateBooking = (req, res) => {
+// @access  Private (Admin)
+exports.updateBooking = async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { id } = req.params;
     const { status, cleaner } = req.body;
 
-    const bookingIndex = mockDatabase.bookings.findIndex((b) => (b.id || b._id) === id);
+    const updates = {};
+    if (status  !== undefined) updates.status  = status;
+    if (cleaner !== undefined) updates.cleaner = cleaner;
 
-    if (bookingIndex === -1) {
-      return res.status(404).json({ success: false, message: 'Booking not found.' });
+    const { data, error } = await supabase
+      .from('bookings')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ success: false, message: 'Booking not found.' });
+      }
+      throw error;
     }
 
-    if (status !== undefined) {
-      mockDatabase.bookings[bookingIndex].status = status;
-    }
-    if (cleaner !== undefined) {
-      mockDatabase.bookings[bookingIndex].cleaner = cleaner;
-    }
-
-    saveBookingsToFile();
-
-    res.status(200).json({ success: true, data: mockDatabase.bookings[bookingIndex] });
+    res.status(200).json({ success: true, data: mapBooking(data) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -122,19 +158,18 @@ exports.updateBooking = (req, res) => {
 
 // @desc    Delete a booking
 // @route   DELETE /api/bookings/:id
-// @access  Private (Admin only simulation)
-exports.deleteBooking = (req, res) => {
+// @access  Private (Admin)
+exports.deleteBooking = async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { id } = req.params;
 
-    const bookingIndex = mockDatabase.bookings.findIndex((b) => (b.id || b._id) === id);
+    const { error } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('id', id);
 
-    if (bookingIndex === -1) {
-      return res.status(404).json({ success: false, message: 'Booking not found.' });
-    }
-
-    mockDatabase.bookings.splice(bookingIndex, 1);
-    saveBookingsToFile();
+    if (error) throw error;
 
     res.status(200).json({ success: true, message: 'Booking deleted successfully.' });
   } catch (error) {
