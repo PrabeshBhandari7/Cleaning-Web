@@ -15,8 +15,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// ─── Connect Database ─────────────────────────────────────────────────────────
-connectDB();
+// ─── Connect Database then Start Server ─────────────────────────────────────
+// connectDB is async — we must await it before accepting requests
 
 // ─── Security Headers (Helmet) ────────────────────────────────────────────────
 // Sets strong HTTP headers to prevent common attack vectors (XSS, clickjacking,
@@ -27,12 +27,17 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'"],
+        // Allow inline styles required by TailwindCSS v4 (which injects styles at runtime)
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://qtbeoephtgmwbljnzfmd.supabase.co'],
         objectSrc: ["'none'"],
         upgradeInsecureRequests: [],
       },
     },
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    referrerPolicy: { policy: 'no-referrer' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     hsts: {
       maxAge: 31536000, // 1 year
       includeSubDomains: true,
@@ -160,11 +165,21 @@ app.use((err, req, res, next) => {
 });
 
 // ─── Graceful Shutdown ────────────────────────────────────────────────────────
-// Properly close the server on SIGTERM/SIGINT to avoid port conflicts on restart.
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
-  console.log(`🔒 Security: Helmet, CORS, Rate-Limiting, HPP, Body-Size limits active`);
-});
+// Start only after DB is connected
+let server;
+
+(async () => {
+  try {
+    await connectDB();
+    server = app.listen(PORT, () => {
+      console.log(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
+      console.log(`🔒 Security: Helmet, CORS, Rate-Limiting, HPP, Body-Size limits, JWT Auth active`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to connect to database. Server not started.', err.message);
+    process.exit(1);
+  }
+})();
 
 const gracefulShutdown = (signal) => {
   console.log(`\n⚡ ${signal} received. Shutting down gracefully...`);
