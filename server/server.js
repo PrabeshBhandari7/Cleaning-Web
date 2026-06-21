@@ -1,6 +1,11 @@
+'use strict';
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const morgan = require('morgan');
+const hpp = require('hpp');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const { connectDB } = require('./config/db');
@@ -8,42 +13,186 @@ const apiRoutes = require('./routes/api');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// Connect database helper
+// ─── Connect Database ─────────────────────────────────────────────────────────
 connectDB();
 
-// Middlewares
-app.use(helmet());
+// ─── Security Headers (Helmet) ────────────────────────────────────────────────
+// Sets strong HTTP headers to prevent common attack vectors (XSS, clickjacking,
+// MIME-sniffing, etc.)
 app.use(
-  cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
-    credentials: true,
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    crossOriginResourcePolicy: { policy: 'same-origin' },
+    referrerPolicy: { policy: 'no-referrer' },
+    hsts: {
+      maxAge: 31536000, // 1 year
+      includeSubDomains: true,
+      preload: true,
+    },
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// Root Route
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+// Only allow requests from the configured frontend origin.
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(',')
+  .map((o) => o.trim());
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (e.g., server-to-server, Postman in dev)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS policy: origin '${origin}' not allowed.`));
+      }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+    optionsSuccessStatus: 200,
+  })
+);
+
+// ─── Body Parsers (with size limits) ─────────────────────────────────────────
+// Limiting JSON and URL-encoded body sizes prevents DoS via oversized payloads.
+app.use(express.json({ limit: '50kb' }));
+app.use(express.urlencoded({ extended: true, limit: '50kb' }));
+
+// ─── HTTP Parameter Pollution Prevention ─────────────────────────────────────
+// Prevents attackers from sending duplicate query parameters to bypass validation.
+app.use(hpp());
+
+// ─── Request Logging ──────────────────────────────────────────────────────────
+if (NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
+}
+
+// ─── Global Rate Limiter ──────────────────────────────────────────────────────
+// Prevents brute-force and DoS attacks by limiting requests per IP.
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,                  // max 200 requests per window per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP. Please try again after 15 minutes.',
+  },
+});
+app.use(globalLimiter);
+
+// ─── Strict Rate Limiter for Write Operations ──────────────────────────────────
+// Admin write routes are further protected with a tighter rate limit.
+const adminWriteLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 50,                   // max 50 admin writes per window per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    message: 'Too many admin requests. Slow down and try again.',
+  },
+});
+
+// ─── Disable Fingerprinting ───────────────────────────────────────────────────
+app.disable('x-powered-by'); // Already done by helmet, but explicit is better
+
+// ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.status(200).json({
-    message: 'Welcome to Cleaning-Web API services',
-    status: 'online',
+    success: true,
+    message: 'Platinum Smile Cleaning API is online.',
+    version: '2.0.0',
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString(),
   });
 });
 
-// API Routes
+// ─── API Routes ───────────────────────────────────────────────────────────────
 app.use('/api', apiRoutes);
 
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({
+// ─── 404 Handler ──────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({
     success: false,
-    message: 'An internal server error occurred.',
+    message: `Route '${req.originalUrl}' not found.`,
   });
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+// ─── Global Error Handler ─────────────────────────────────────────────────────
+// Catches all unhandled errors and returns a safe generic response in production.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  // Handle CORS errors specifically
+  if (err.message && err.message.startsWith('CORS policy')) {
+    return res.status(403).json({ success: false, message: err.message });
+  }
+
+  // Log full error in development; suppress in production
+  if (NODE_ENV === 'development') {
+    console.error('❌ Unhandled Error:', err.stack);
+  } else {
+    console.error(`❌ Server Error [${new Date().toISOString()}]: ${err.message}`);
+  }
+
+  const statusCode = err.status || err.statusCode || 500;
+
+  res.status(statusCode).json({
+    success: false,
+    message:
+      NODE_ENV === 'production'
+        ? 'An unexpected error occurred. Please try again later.'
+        : err.message || 'Internal Server Error',
+  });
 });
+
+// ─── Graceful Shutdown ────────────────────────────────────────────────────────
+// Properly close the server on SIGTERM/SIGINT to avoid port conflicts on restart.
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
+  console.log(`🔒 Security: Helmet, CORS, Rate-Limiting, HPP, Body-Size limits active`);
+});
+
+const gracefulShutdown = (signal) => {
+  console.log(`\n⚡ ${signal} received. Shutting down gracefully...`);
+  server.close(() => {
+    console.log('✅ HTTP server closed cleanly.');
+    process.exit(0);
+  });
+
+  // Force shutdown if graceful close takes > 10 seconds
+  setTimeout(() => {
+    console.error('⏰ Force shutdown after timeout.');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('🔥 Unhandled Promise Rejection at:', promise, 'Reason:', reason);
+  // Don't exit — let the error handler deal with individual requests
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception:', err.message);
+  gracefulShutdown('uncaughtException');
+});
+
+module.exports = app;

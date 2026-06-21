@@ -25,6 +25,13 @@ import {
 } from 'lucide-react';
 
 import { sendBookingNotification } from './services/emailService';
+
+// Admin API token — must match ADMIN_SECRET_TOKEN in server/.env
+const ADMIN_TOKEN = 'platinumsmile-admin-secret-2024';
+const ADMIN_HEADERS = {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${ADMIN_TOKEN}`,
+};
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -558,9 +565,7 @@ function App() {
     try {
       const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: ADMIN_HEADERS,
         body: JSON.stringify({ isActive: !currentActiveState }),
       });
       const data = await res.json();
@@ -617,9 +622,7 @@ function App() {
     try {
       const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: ADMIN_HEADERS,
         body: JSON.stringify(updatedData),
       });
       const data = await res.json();
@@ -641,6 +644,7 @@ function App() {
     try {
       const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
         method: 'DELETE',
+        headers: ADMIN_HEADERS,
       });
       const data = await res.json();
       if (data.success) {
@@ -661,9 +665,7 @@ function App() {
     try {
       const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: ADMIN_HEADERS,
         body: JSON.stringify(updatedData),
       });
       const data = await res.json();
@@ -691,6 +693,7 @@ function App() {
     try {
       const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
         method: 'DELETE',
+        headers: ADMIN_HEADERS,
       });
       const data = await res.json();
       if (data.success) {
@@ -728,9 +731,7 @@ function App() {
     try {
       const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: ADMIN_HEADERS,
         body: JSON.stringify({ price: numericValue }),
       });
       const data = await res.json();
@@ -779,9 +780,7 @@ function App() {
     try {
       const res = await fetch('http://localhost:5000/api/services', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: ADMIN_HEADERS,
         body: JSON.stringify({
           title: newService.title,
           desc:
