@@ -55,15 +55,23 @@ export default function Contact({
     <>
       <Helmet>
         <title>Book a Cleaning Service | Platinum Smile Dubai</title>
-        <meta name="description" content="Get a free quote and book your cleaning service online. 100% Happiness Guaranteed with Platinum Smile." />
+        <meta name="description" content="Get a free quote and book your cleaning service online. 100% Happiness Guaranteed with Platinum Smile Building Cleaning Services LLC." />
+        <link rel="canonical" href="https://www.platinumsmilecleaning.com/contact" />
+        <meta property="og:title" content="Book a Cleaning Service | Platinum Smile Dubai" />
+        <meta property="og:description" content="Book online or get a free quote. Same-day and next-day availability. 100% Happiness Guaranteed." />
+        <meta property="og:url" content="https://www.platinumsmilecleaning.com/contact" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://www.platinumsmilecleaning.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Book a Cleaning Service | Platinum Smile Dubai" />
       </Helmet>
 
       <section className="bg-white py-20 border-t border-brand-border">
       <div className="max-w-4xl mx-auto px-6">
         <div className="text-center space-y-3 mb-12">
-          <h2 className="text-3xl md:text-4xl font-display font-black text-brand-green">
+          <h1 className="text-3xl md:text-4xl font-display font-black text-brand-green">
             Secure Your Pristine Space Today
-          </h2>
+          </h1>
           <p className="text-slate-500 max-w-lg mx-auto">
             Tell us about your space and select a date. We'll match you with the best professional
             cleaning team.
@@ -130,7 +138,7 @@ export default function Contact({
                 <div className="flex justify-between pt-2">
                   <span className="text-slate-400 font-bold">Total Price paid:</span>
                   <strong className="text-brand-orange text-lg font-black">
-                    {formatPrice(placedBookingDetails.price)}
+                    {formatPrice(placedBookingDetails.totalPrice)}
                   </strong>
                 </div>
               </div>
