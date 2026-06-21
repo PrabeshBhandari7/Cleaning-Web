@@ -23,8 +23,15 @@ export default function Services({ services, formatPrice, setFormData, setFormHi
   return (
     <>
       <Helmet>
-        <title>Our Services | Residential & Commercial Cleaning Dubai</title>
+        <title>Our Services | Residential &amp; Commercial Cleaning Dubai</title>
         <meta name="description" content="Explore our complete portfolio of cleaning, painting, plumbing, and maintenance services in Dubai. Book instantly online." />
+        <link rel="canonical" href="https://www.platinumsmilecleaning.com/services" />
+        <meta property="og:title" content="Our Services | Platinum Smile Cleaning Dubai" />
+        <meta property="og:description" content="Residential, commercial, deep cleaning, washroom disinfection and more. Book instantly online." />
+        <meta property="og:url" content="https://www.platinumsmilecleaning.com/services" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://www.platinumsmilecleaning.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
       </Helmet>
       
       <section className="py-20 bg-brand-bg">
@@ -33,9 +40,9 @@ export default function Services({ services, formatPrice, setFormData, setFormHi
           <span className="text-xs font-bold text-brand-orange uppercase tracking-widest block">
             Our Service Portfolio
           </span>
-          <h2 className="text-3xl md:text-4xl font-display font-black text-brand-green">
+          <h1 className="text-3xl md:text-4xl font-display font-black text-brand-green">
             Tailored Services for Every Environment
-          </h2>
+          </h1>
           <p className="text-slate-500 text-sm">
             Click on any service card below to automatically select it in the calculator and book!
           </p>
@@ -50,7 +57,9 @@ export default function Services({ services, formatPrice, setFormData, setFormHi
             >
               <img
                 src={service.image}
-                alt={service.title}
+                alt={`${service.title} in Dubai - Platinum Smile Cleaning`}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-6">
