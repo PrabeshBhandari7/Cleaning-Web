@@ -1,0 +1,38 @@
+[
+  {
+    "id": "CW-84092-DEEP",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "serviceType": "deep",
+    "size": "2-3bed",
+    "frequency": "weekly",
+    "totalPrice": 204,
+    "status": "scheduled",
+    "date": "2026-06-24",
+    "cleaner": "Sarah Jenkins (⭐️ 4.95)"
+  },
+  {
+    "id": "CW-19283-MOVE",
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "serviceType": "residential",
+    "size": "studio",
+    "frequency": "once",
+    "totalPrice": 96,
+    "status": "completed",
+    "date": "2026-06-18",
+    "cleaner": "Sarah Jenkins (⭐️ 4.95)"
+  },
+  {
+    "id": "CW-40582",
+    "name": "Robert King",
+    "email": "robertking@example.com",
+    "serviceType": "construction",
+    "size": "2-3bed",
+    "frequency": "weekly",
+    "totalPrice": 246,
+    "status": "scheduled",
+    "date": "2026-06-21",
+    "cleaner": "Sarah Jenkins (⭐️ 4.95)"
+  }
+]

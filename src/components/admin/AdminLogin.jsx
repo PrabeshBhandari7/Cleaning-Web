@@ -22,7 +22,7 @@ export default function AdminLogin({ onSubmit, onCancel, error }) {
             <Lock className="w-6 h-6" />
           </div>
           <h3 className="text-2xl font-display font-black text-slate-800 tracking-tight">
-            CCRM Access
+            Admin Access
           </h3>
           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
             Authorized Personnel Only
@@ -77,7 +77,7 @@ export default function AdminLogin({ onSubmit, onCancel, error }) {
               onClick={onCancel}
               className="flex-grow py-3 rounded-xl text-xs font-extrabold border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-all cursor-pointer shadow-sm"
             >
-              Cancel
+              Back
             </button>
             <button
               type="submit"

@@ -828,13 +828,12 @@ function App() {
       {/* Admin Login Modal */}
       {showAdminLogin && (
         <AdminLogin 
-          adminUsername={adminUsername}
-          setAdminUsername={setAdminUsername}
-          adminPassword={adminPassword}
-          setAdminPassword={setAdminPassword}
-          handleAdminLoginSubmit={handleAdminLoginSubmit}
-          setShowAdminLogin={setShowAdminLogin}
-          adminError={adminError}
+          onSubmit={handleAdminLoginSubmit}
+          onCancel={() => {
+            setShowAdminLogin(false);
+            setAdminError('');
+          }}
+          error={adminError}
         />
       )}
 

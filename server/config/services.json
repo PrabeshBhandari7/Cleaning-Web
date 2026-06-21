@@ -1,0 +1,83 @@
+[
+  {
+    "id": "residential",
+    "title": "Residential Cleaning",
+    "desc": "Detailed dusting, scrubbing, and sanitizing for apartments and family homes.",
+    "price": 120,
+    "imageKey": "residential",
+    "badge": "Detailed home care",
+    "iconId": "home"
+  },
+  {
+    "id": "office",
+    "title": "Office Cleaning",
+    "desc": "Organized and disinfected work desks, restrooms, and reception halls.",
+    "price": 250,
+    "imageKey": "office",
+    "badge": "Sanitized workplaces",
+    "iconId": "office"
+  },
+  {
+    "id": "deep",
+    "title": "Deep Cleaning",
+    "desc": "Heavy-duty restore cleaning targeting baseboards, filters, and behind appliances.",
+    "price": 180,
+    "imageKey": "deep",
+    "badge": "Pristine restoration",
+    "iconId": "deep"
+  },
+  {
+    "id": "washroom",
+    "title": "Washroom Disinfection",
+    "desc": "Complete wall-to-floor bleaching, grout scrubbing, and biological sanitization.",
+    "price": 70,
+    "imageKey": "washroom",
+    "badge": "Hygienic restrooms",
+    "iconId": "washroom"
+  },
+  {
+    "id": "city",
+    "title": "City & Municipal Clean",
+    "desc": "Public park sweeps, municipal trash removal, and local square power washing.",
+    "price": 450,
+    "imageKey": "city",
+    "badge": "Community spaces",
+    "iconId": "city"
+  },
+  {
+    "id": "road",
+    "title": "Road Sweeping & Washing",
+    "desc": "Heavy road sweeper broom cleaning and high-pressure asphalt wash.",
+    "price": 380,
+    "imageKey": "road",
+    "badge": "Clean thoroughfares",
+    "iconId": "road"
+  },
+  {
+    "id": "construction",
+    "title": "Post-Construction Detail",
+    "desc": "Removing brick dust, paint marks, plaster smears, and structural cleanup.",
+    "price": 320,
+    "imageKey": "deep",
+    "badge": "Dust & debris clearance",
+    "iconId": "deep"
+  },
+  {
+    "id": "moveout",
+    "title": "Move-In / Move-Out Clean",
+    "desc": "End-of-tenancy scrubbing to secure security deposits and welcome new tenants.",
+    "price": 220,
+    "imageKey": "residential",
+    "badge": "Ready for tenancy",
+    "iconId": "home"
+  },
+  {
+    "id": "carpet",
+    "title": "Carpet & Upholstery Steam",
+    "desc": "High-temp steam soil extraction for carpets, sofas, and office seating.",
+    "price": 90,
+    "imageKey": "office",
+    "badge": "Steam soil extraction",
+    "iconId": "deep"
+  }
+]
