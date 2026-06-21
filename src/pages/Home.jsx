@@ -56,6 +56,8 @@ function ServiceCard({ title, desc, image, badge, price, formatPrice, icon: Icon
         <img
           src={image}
           alt={title}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -156,40 +158,23 @@ function FAQItem({ q, a }) {
    MAIN HOME PAGE COMPONENT
    ══════════════════════════════════════════════════ */
 export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
-  const featuredServices = [
-    {
-      title: 'Residential Cleaning',
-      desc: 'Detailed dusting, scrubbing, and sanitizing for apartments, villas, and family homes across Dubai.',
-      image: residentialImg,
-      badge: 'Most Popular',
-      price: 150,
-      icon: HomeIcon,
-    },
-    {
-      title: 'Commercial Cleaning',
-      desc: 'Organized and disinfected offices, restrooms, and reception halls to keep your business pristine.',
-      image: officeImg,
-      badge: 'Business Ready',
-      price: 300,
-      icon: Briefcase,
-    },
-    {
-      title: 'Deep Cleaning',
-      desc: 'Heavy-duty restore cleaning targeting baseboards, filters, and behind appliances for a fresh start.',
-      image: deepImg,
-      badge: 'Full Restoration',
-      price: 250,
-      icon: Sparkles,
-    },
-    {
-      title: 'Washroom Sanitization',
-      desc: 'Complete wall-to-floor bleaching, grout scrubbing, and biological sanitization for hygienic restrooms.',
-      image: washroomImg,
-      badge: 'Hygiene First',
-      price: 120,
-      icon: Droplets,
-    },
-  ];
+  // Use first 4 live active services from the backend.
+  // Falls back to a hardcoded skeleton list while loading.
+  const featuredServices = (services && services.length > 0)
+    ? services.slice(0, 4).map((s) => ({
+        title: s.title,
+        desc:  s.description,
+        image: s.image,
+        badge: s.badge,
+        price: s.price,
+        icon:  s.icon,
+      }))
+    : [
+        { title: 'Residential Cleaning', desc: 'Expert home cleaning services.', image: residentialImg, badge: 'Most Popular', price: 150, icon: HomeIcon },
+        { title: 'Commercial Cleaning',  desc: 'Office and commercial spaces.',  image: officeImg,      badge: 'Business Ready', price: 300, icon: Briefcase },
+        { title: 'Deep Cleaning',        desc: 'Heavy-duty restoration clean.',  image: deepImg,        badge: 'Full Restoration', price: 250, icon: Sparkles },
+        { title: 'Washroom Sanitization',desc: 'Wall-to-floor sanitization.',    image: washroomImg,    badge: 'Hygiene First', price: 120, icon: Droplets },
+      ];
 
   const testimonials = [
     {
@@ -272,11 +257,17 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
   return (
     <>
       <Helmet>
-        <title>Professional Cleaning Services in Dubai | Cleaning.Web</title>
-        <meta
-          name="description"
-          content="Dubai's #1 professional cleaning company. Expert residential, commercial, deep cleaning, and maintenance services. Eco-friendly, vetted staff, same-day booking available."
-        />
+        <title>Professional Cleaning Services in Dubai | Platinum Smile</title>
+        <meta name="description" content="Dubai's #1 professional cleaning company. Expert residential, commercial, deep cleaning, and maintenance services. Eco-friendly, vetted staff, same-day booking available." />
+        <link rel="canonical" href="https://www.platinumsmilecleaning.com/" />
+        <meta property="og:title" content="Professional Cleaning Services in Dubai | Platinum Smile" />
+        <meta property="og:description" content="Dubai's #1 professional cleaning company. Eco-friendly, vetted staff, same-day booking available." />
+        <meta property="og:url" content="https://www.platinumsmilecleaning.com/" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://www.platinumsmilecleaning.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Professional Cleaning Services in Dubai | Platinum Smile" />
+        <meta name="twitter:description" content="Dubai's #1 professional cleaning company. Eco-friendly, vetted staff, same-day booking available." />
       </Helmet>
 
       {/* ── HERO SECTION ── */}
