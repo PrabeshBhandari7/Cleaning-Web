@@ -1,14 +1,34 @@
-const { mockDatabase, saveServicesToFile } = require('../config/db');
+const { getSupabase } = require('../config/db');
 
-// @desc    Get all active cleaning service types
+// ─── Helper: map Supabase row → API response shape ───────────────────────────
+const mapService = (row) => ({
+  id:       row.id,
+  title:    row.title,
+  desc:     row.description,
+  price:    row.price,
+  imageKey: row.image_key,
+  badge:    row.badge,
+  iconId:   row.icon_id,
+  isActive: row.is_active,
+});
+
+// @desc    Get all cleaning service types
 // @route   GET /api/services
 // @access  Public
-exports.getServices = (req, res) => {
+exports.getServices = async (req, res) => {
   try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('services')
+      .select('*')
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
     res.status(200).json({
       success: true,
-      count: mockDatabase.services.length,
-      data: mockDatabase.services,
+      count: data.length,
+      data: data.map(mapService),
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -17,30 +37,36 @@ exports.getServices = (req, res) => {
 
 // @desc    Add a new cleaning service type
 // @route   POST /api/services
-// @access  Private (Admin only simulation)
-exports.createService = (req, res) => {
+// @access  Private (Admin)
+exports.createService = async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { title, desc, price, badge, iconId, imageKey } = req.body;
 
     if (!title || !price) {
       return res.status(400).json({ success: false, message: 'Please provide title and price.' });
     }
 
-    const created = {
-      id: 'custom_' + Date.now(),
-      title,
-      desc: desc || 'Premium custom cleaning service.',
-      price: Number(price) || 0,
-      badge: badge || 'Special service',
-      iconId: iconId || 'deep',
-      imageKey: imageKey || 'deep',
-      isActive: true,
-    };
+    const newId = 'custom_' + Date.now();
 
-    mockDatabase.services.push(created);
-    saveServicesToFile();
+    const { data, error } = await supabase
+      .from('services')
+      .insert([{
+        id:          newId,
+        title,
+        description: desc || 'Premium custom cleaning service.',
+        price:       Number(price) || 0,
+        badge:       badge || 'Special service',
+        icon_id:     iconId || 'deep',
+        image_key:   imageKey || 'deep',
+        is_active:   true,
+      }])
+      .select()
+      .single();
 
-    res.status(201).json({ success: true, data: created });
+    if (error) throw error;
+
+    res.status(201).json({ success: true, data: mapService(data) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -48,43 +74,38 @@ exports.createService = (req, res) => {
 
 // @desc    Update an existing cleaning service type
 // @route   PUT /api/services/:id
-// @access  Private (Admin only simulation)
-exports.updateService = (req, res) => {
+// @access  Private (Admin)
+exports.updateService = async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { id } = req.params;
-    const { title, desc, price, badge, iconId, imageKey } = req.body;
+    const { title, desc, price, badge, iconId, imageKey, isActive } = req.body;
 
-    const serviceIndex = mockDatabase.services.findIndex((s) => s.id === id);
+    // Build only the fields that were sent
+    const updates = {};
+    if (title     !== undefined) updates.title       = title;
+    if (desc      !== undefined) updates.description = desc;
+    if (price     !== undefined) updates.price       = Number(price) || 0;
+    if (badge     !== undefined) updates.badge       = badge;
+    if (iconId    !== undefined) updates.icon_id     = iconId;
+    if (imageKey  !== undefined) updates.image_key   = imageKey;
+    if (isActive  !== undefined) updates.is_active   = !!isActive;
 
-    if (serviceIndex === -1) {
-      return res.status(404).json({ success: false, message: 'Service not found.' });
-    }
+    const { data, error } = await supabase
+      .from('services')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
-    if (price !== undefined) {
-      mockDatabase.services[serviceIndex].price = Number(price) || 0;
-    }
-    if (title !== undefined) {
-      mockDatabase.services[serviceIndex].title = title;
-    }
-    if (desc !== undefined) {
-      mockDatabase.services[serviceIndex].desc = desc;
-    }
-    if (badge !== undefined) {
-      mockDatabase.services[serviceIndex].badge = badge;
-    }
-    if (iconId !== undefined) {
-      mockDatabase.services[serviceIndex].iconId = iconId;
-    }
-    if (imageKey !== undefined) {
-      mockDatabase.services[serviceIndex].imageKey = imageKey;
-    }
-    if (req.body.isActive !== undefined) {
-      mockDatabase.services[serviceIndex].isActive = !!req.body.isActive;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ success: false, message: 'Service not found.' });
+      }
+      throw error;
     }
 
-    saveServicesToFile();
-
-    res.status(200).json({ success: true, data: mockDatabase.services[serviceIndex] });
+    res.status(200).json({ success: true, data: mapService(data) });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -92,30 +113,31 @@ exports.updateService = (req, res) => {
 
 // @desc    Delete a cleaning service type
 // @route   DELETE /api/services/:id
-// @access  Private (Admin only simulation)
-exports.deleteService = (req, res) => {
+// @access  Private (Admin)
+exports.deleteService = async (req, res) => {
   try {
+    const supabase = getSupabase();
     const { id } = req.params;
 
-    const serviceIndex = mockDatabase.services.findIndex((s) => s.id === id);
+    // Prevent deleting the last service
+    const { count, error: countError } = await supabase
+      .from('services')
+      .select('*', { count: 'exact', head: true });
 
-    if (serviceIndex === -1) {
-      return res.status(404).json({ success: false, message: 'Service not found.' });
+    if (countError) throw countError;
+    if (count <= 1) {
+      return res.status(400).json({ success: false, message: 'Cannot delete the last remaining service.' });
     }
 
-    if (mockDatabase.services.length <= 1) {
-      return res.status(400).json({
-        success: false,
-        message: 'Cannot delete the last remaining service.',
-      });
-    }
+    const { error } = await supabase
+      .from('services')
+      .delete()
+      .eq('id', id);
 
-    mockDatabase.services.splice(serviceIndex, 1);
-    saveServicesToFile();
+    if (error) throw error;
 
     res.status(200).json({ success: true, message: 'Service deleted successfully.' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
