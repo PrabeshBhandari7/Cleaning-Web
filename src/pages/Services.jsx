@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,7 +21,13 @@ export default function Services({ services, formatPrice, setFormData, setFormHi
   };
 
   return (
-    <section className="py-20 bg-brand-bg">
+    <>
+      <Helmet>
+        <title>Our Services | Residential & Commercial Cleaning Dubai</title>
+        <meta name="description" content="Explore our complete portfolio of cleaning, painting, plumbing, and maintenance services in Dubai. Book instantly online." />
+      </Helmet>
+      
+      <section className="py-20 bg-brand-bg">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center space-y-3 mb-16 max-w-xl mx-auto">
           <span className="text-xs font-bold text-brand-orange uppercase tracking-widest block">
@@ -80,5 +87,6 @@ export default function Services({ services, formatPrice, setFormData, setFormHi
         </div>
       </div>
     </section>
+    </>
   );
 }

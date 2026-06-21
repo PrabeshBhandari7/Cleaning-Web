@@ -1,9 +1,16 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { ChevronRight } from 'lucide-react';
 
 export default function Blogs({ blogList, setSelectedBlog }) {
   return (
-    <section className="py-20 bg-brand-bg">
+    <>
+      <Helmet>
+        <title>Clean Living Guides & Blogs | Platinum Smile</title>
+        <meta name="description" content="Read our latest guides, tips, and news on maintaining a clean and healthy environment in Dubai." />
+      </Helmet>
+      
+      <section className="py-20 bg-brand-bg">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center space-y-3 mb-16 max-w-xl mx-auto">
           <span className="text-xs font-bold text-brand-orange uppercase tracking-widest block">
@@ -44,5 +51,6 @@ export default function Blogs({ blogList, setSelectedBlog }) {
         </div>
       </div>
     </section>
+    </>
   );
 }

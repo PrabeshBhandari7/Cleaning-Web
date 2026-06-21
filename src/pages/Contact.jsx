@@ -1,5 +1,6 @@
-import React from 'react';
-import { ShieldCheck, Calendar, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { ShieldCheck, Calendar, Check, AlertCircle } from 'lucide-react';
 
 export default function Contact({
   formData,
@@ -14,8 +15,50 @@ export default function Contact({
   formatPrice,
   nameInputRef,
 }) {
+  const [captchaA, setCaptchaA] = useState(0);
+  const [captchaB, setCaptchaB] = useState(0);
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [honeypot, setHoneypot] = useState('');
+  const [captchaError, setCaptchaError] = useState(false);
+
+  useEffect(() => {
+    // Generate new math problem on load
+    setCaptchaA(Math.floor(Math.random() * 10) + 1);
+    setCaptchaB(Math.floor(Math.random() * 10) + 1);
+  }, [bookingPlaced]);
+
+  const onLocalSubmit = (e) => {
+    e.preventDefault();
+    // Honeypot check for bots
+    if (honeypot !== '') {
+      return; 
+    }
+    // Math CAPTCHA check
+    if (parseInt(captchaAnswer) !== (captchaA + captchaB)) {
+      setCaptchaError(true);
+      return;
+    }
+    setCaptchaError(false);
+    handleBookingSubmit(e);
+  };
+
+  const handleAddonToggle = (addonName) => {
+    const currentAddons = formData.addons || [];
+    if (currentAddons.includes(addonName)) {
+      setFormData({ ...formData, addons: currentAddons.filter(a => a !== addonName) });
+    } else {
+      setFormData({ ...formData, addons: [...currentAddons, addonName] });
+    }
+  };
+
   return (
-    <section className="bg-white py-20 border-t border-brand-border">
+    <>
+      <Helmet>
+        <title>Book a Cleaning Service | Platinum Smile Dubai</title>
+        <meta name="description" content="Get a free quote and book your cleaning service online. 100% Happiness Guaranteed with Platinum Smile." />
+      </Helmet>
+
+      <section className="bg-white py-20 border-t border-brand-border">
       <div className="max-w-4xl mx-auto px-6">
         <div className="text-center space-y-3 mb-12">
           <h2 className="text-3xl md:text-4xl font-display font-black text-brand-green">
@@ -113,7 +156,21 @@ export default function Contact({
             </div>
           ) : (
             // Form Layout
-            <form onSubmit={handleBookingSubmit} className="space-y-6">
+            <form onSubmit={onLocalSubmit} className="space-y-6">
+              {/* HONEYPOT - Hidden from real users, filled by bots */}
+              <div className="absolute left-[-9999px] top-[-9999px]" aria-hidden="true">
+                <label htmlFor="website">Website (Leave blank)</label>
+                <input 
+                  type="text" 
+                  id="website" 
+                  name="website" 
+                  tabIndex="-1" 
+                  autoComplete="off" 
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
+              </div>
+
               <div className="grid md:grid-cols-3 gap-6">
                 {/* Full Name */}
                 <div className="space-y-2">
@@ -215,6 +272,71 @@ export default function Contact({
                 />
               </div>
 
+              {/* Add-ons Upsell Section */}
+              <div className="space-y-3">
+                <label className="text-sm font-semibold text-slate-600 block">Optional Add-ons</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { id: 'fridge', label: 'Inside Fridge (+50)', price: 50 },
+                    { id: 'oven', label: 'Inside Oven (+50)', price: 50 },
+                    { id: 'balcony', label: 'Balcony Wash (+100)', price: 100 },
+                    { id: 'windows', label: 'Window Cleaning (+150)', price: 150 },
+                  ].map((addon) => (
+                    <label 
+                      key={addon.id} 
+                      className={`flex items-center gap-2 p-3 rounded-xl border text-sm cursor-pointer transition-colors ${
+                        (formData.addons || []).includes(addon.id) 
+                          ? 'border-brand-green bg-brand-green/5 text-brand-green font-semibold' 
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-brand-green'
+                      }`}
+                    >
+                      <input 
+                        type="checkbox" 
+                        className="hidden" 
+                        checked={(formData.addons || []).includes(addon.id)} 
+                        onChange={() => handleAddonToggle(addon.id)} 
+                      />
+                      <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
+                        (formData.addons || []).includes(addon.id) ? 'bg-brand-green border-brand-green' : 'border-slate-300'
+                      }`}>
+                        {(formData.addons || []).includes(addon.id) && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                      {addon.label}
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Math CAPTCHA */}
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-brand-green" /> Anti-Spam Check
+                  </label>
+                  <p className="text-xs text-slate-500">Please solve the math problem to prove you are human.</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg font-black text-slate-700 tracking-wider bg-white px-4 py-2 border rounded-lg shadow-sm">
+                    {captchaA} + {captchaB} = ?
+                  </span>
+                  <input
+                    type="number"
+                    required
+                    placeholder="Answer"
+                    value={captchaAnswer}
+                    onChange={(e) => setCaptchaAnswer(e.target.value)}
+                    className={`w-24 px-4 py-2 rounded-xl border bg-white text-slate-800 focus:outline-none focus:ring-1 text-sm ${
+                      captchaError ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-slate-300 focus:border-brand-green focus:ring-brand-green'
+                    }`}
+                  />
+                </div>
+              </div>
+              {captchaError && (
+                <div className="text-red-500 text-sm font-semibold flex items-center gap-1.5 justify-end">
+                  <AlertCircle className="w-4 h-4" /> Incorrect answer. Please try again.
+                </div>
+              )}
+
               <div className="flex justify-end pt-4 border-t border-slate-100">
                 <button
                   type="submit"
@@ -228,5 +350,6 @@ export default function Contact({
         </div>
       </div>
     </section>
+    </>
   );
 }

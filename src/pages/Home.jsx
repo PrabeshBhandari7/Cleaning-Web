@@ -1,4 +1,5 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Phone, Star, Sparkles, Check, ArrowRight } from 'lucide-react';
 import heroImg from '../assets/hero_clean_space.png';
@@ -6,6 +7,11 @@ import heroImg from '../assets/hero_clean_space.png';
 export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
   return (
     <>
+      <Helmet>
+        <title>Professional Cleaning Services in Dubai | Platinum Smile</title>
+        <meta name="description" content="Reliable cleaning, maintenance, painting, and plumbing services for homes and offices in Dubai. Get a free quote today!" />
+      </Helmet>
+
       {/* HERO SECTION */}
       <section className="max-w-7xl mx-auto px-6 py-12 md:py-24 grid md:grid-cols-12 gap-12 items-center">
         <div className="md:col-span-6 space-y-6">
@@ -205,23 +211,6 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
         </div>
       </section>
 
-      {/* PARTNERS / SEEN ON */}
-      <section className="bg-slate-50 py-12 border-b border-brand-border">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-around gap-8 opacity-60">
-          <span className="text-xs uppercase font-extrabold tracking-widest text-slate-400">
-            As seen on:
-          </span>
-          <div className="font-display font-black text-xl text-slate-500 tracking-wider">
-            CLEAN & CO.
-          </div>
-          <div className="font-display font-black text-xl text-slate-500 tracking-wider">
-            PURE & SIMPLE
-          </div>
-          <div className="font-display font-black text-xl text-slate-500 tracking-wider">
-            ECO-SHINE
-          </div>
-        </div>
-      </section>
     </>
   );
 }
