@@ -6,8 +6,16 @@ export default function About() {
   return (
     <>
       <Helmet>
-        <title>About Us | Platinum Smile Dubai</title>
+        <title>About Us | Platinum Smile Building Cleaning Services Dubai</title>
         <meta name="description" content="Learn more about Platinum Smile Building Cleaning Services LLC, our reliable team, and why we are trusted across Dubai for quality workmanship." />
+        <link rel="canonical" href="https://www.platinumsmilecleaning.com/about" />
+        <meta property="og:title" content="About Us | Platinum Smile Cleaning Dubai" />
+        <meta property="og:description" content="Trusted by 10,000+ clients across Dubai. Learn about our professional team, eco-friendly approach, and 8+ years of experience." />
+        <meta property="og:url" content="https://www.platinumsmilecleaning.com/about" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://www.platinumsmilecleaning.com/og-image.jpg" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="About Us | Platinum Smile Cleaning Dubai" />
       </Helmet>
 
       {/* ABOUT US */}
@@ -16,9 +24,9 @@ export default function About() {
           <span className="text-xs font-bold text-brand-orange uppercase tracking-widest block">
             About Platinum Smile
           </span>
-          <h2 className="text-3xl md:text-4xl font-display font-black text-brand-green">
+          <h1 className="text-3xl md:text-4xl font-display font-black text-brand-green">
             Professional Cleaning & Maintenance Solutions
-          </h2>
+          </h1>
           <p className="text-lg text-slate-600 leading-relaxed">
             Platinum Smile Building Cleaning Services LLC delivers professional cleaning and maintenance solutions throughout Dubai. Our experienced team is committed to providing dependable service, quality workmanship, and exceptional customer care for both residential and commercial clients.
           </p>
