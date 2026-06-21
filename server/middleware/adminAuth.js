@@ -1,17 +1,27 @@
 /**
  * adminAuth.js
- * Simple token-based admin authentication middleware.
+ * JWT-based admin authentication middleware.
  *
- * The admin token is read from the ADMIN_SECRET_TOKEN environment variable.
- * The frontend must send it in the Authorization header:
- *   Authorization: Bearer <token>
+ * The frontend calls POST /api/auth/login with username + password.
+ * The server validates against ADMIN_USERNAME / ADMIN_PASSWORD env vars,
+ * signs a short-lived JWT, and returns it.
  *
- * This protects all write operations (POST/PUT/DELETE) on admin routes.
+ * All subsequent admin requests must include:
+ *   Authorization: Bearer <jwt_token>
+ *
+ * The JWT secret is NEVER sent to the frontend.
  */
 
-const ADMIN_TOKEN = process.env.ADMIN_SECRET_TOKEN || 'change-me-in-env';
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const adminAuth = (req, res, next) => {
+  if (!JWT_SECRET) {
+    console.error('JWT_SECRET is missing from environment variables.');
+    return res.status(500).json({ success: false, message: 'Server configuration error.' });
+  }
+
   const authHeader = req.headers['authorization'] || req.headers['Authorization'];
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -23,14 +33,16 @@ const adminAuth = (req, res, next) => {
 
   const token = authHeader.split(' ')[1];
 
-  if (token !== ADMIN_TOKEN) {
-    return res.status(403).json({
-      success: false,
-      message: 'Forbidden. Invalid admin token.',
-    });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.admin = decoded;
+    next();
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ success: false, message: 'Session expired. Please log in again.' });
+    }
+    return res.status(403).json({ success: false, message: 'Forbidden. Invalid admin token.' });
   }
-
-  next();
 };
 
 module.exports = adminAuth;

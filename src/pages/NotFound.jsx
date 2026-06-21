@@ -9,6 +9,7 @@ export default function NotFound() {
       <Helmet>
         <title>404 Page Not Found | Platinum Smile Dubai</title>
         <meta name="description" content="The page you are looking for does not exist." />
+        <meta name="robots" content="noindex, follow" />
       </Helmet>
       
       <section className="bg-brand-bg py-32 flex flex-col items-center justify-center text-center px-6 min-h-[60vh]">
