@@ -55,19 +55,12 @@ export default function Layout({
             <Link to="/blogs" className="hover:text-brand-green transition-colors">
               Clean Living
             </Link>
-            {isAdminLoggedIn ? (
+            {isAdminLoggedIn && (
               <button
                 onClick={() => setShowAdminDashboard(true)}
                 className="text-xs font-bold text-brand-orange bg-brand-orange/10 px-2.5 py-1 rounded-md border border-brand-orange/20 animate-pulse hover:bg-brand-orange hover:text-white transition-all cursor-pointer"
               >
                 Admin Panel
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowAdminLogin(true)}
-                className="hover:text-brand-green transition-colors text-sm font-semibold text-slate-500 cursor-pointer"
-              >
-                Admin Portal
               </button>
             )}
           </nav>
@@ -125,7 +118,7 @@ export default function Layout({
               >
                 Clean Living
               </Link>
-              {isAdminLoggedIn ? (
+              {isAdminLoggedIn && (
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
@@ -134,16 +127,6 @@ export default function Layout({
                   className="py-2 border-t border-slate-100 text-left font-bold text-brand-orange cursor-pointer animate-pulse"
                 >
                   Admin Control Panel
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setShowAdminLogin(true);
-                  }}
-                  className="py-2 border-t border-slate-100 text-left font-bold text-slate-500 hover:text-brand-green cursor-pointer"
-                >
-                  Admin Portal
                 </button>
               )}
             </nav>
@@ -281,18 +264,14 @@ export default function Layout({
             <a href="http://www.platinumsmilecleaning.com" className="hover:text-slate-600 transition-colors">
               www.platinumsmilecleaning.com
             </a>
-            <button
-              onClick={() => {
-                if (isAdminLoggedIn) {
-                  setShowAdminDashboard(true);
-                } else {
-                  setShowAdminLogin(true);
-                }
-              }}
-              className="hover:text-slate-600 transition-colors cursor-pointer text-[10px] font-bold uppercase tracking-wider bg-transparent border-none p-0"
-            >
-              Admin Portal
-            </button>
+            {isAdminLoggedIn && (
+              <button
+                onClick={() => setShowAdminDashboard(true)}
+                className="hover:text-slate-600 transition-colors cursor-pointer text-[10px] font-bold uppercase tracking-wider bg-transparent border-none p-0"
+              >
+                Admin Portal
+              </button>
+            )}
           </div>
         </div>
       </footer>
