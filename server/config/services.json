@@ -6,7 +6,8 @@
     "price": 120,
     "imageKey": "residential",
     "badge": "Detailed home care",
-    "iconId": "home"
+    "iconId": "home",
+    "isActive": true
   },
   {
     "id": "office",
@@ -15,7 +16,8 @@
     "price": 250,
     "imageKey": "office",
     "badge": "Sanitized workplaces",
-    "iconId": "office"
+    "iconId": "office",
+    "isActive": true
   },
   {
     "id": "deep",
@@ -24,7 +26,8 @@
     "price": 180,
     "imageKey": "deep",
     "badge": "Pristine restoration",
-    "iconId": "deep"
+    "iconId": "deep",
+    "isActive": true
   },
   {
     "id": "washroom",
@@ -33,7 +36,8 @@
     "price": 70,
     "imageKey": "washroom",
     "badge": "Hygienic restrooms",
-    "iconId": "washroom"
+    "iconId": "washroom",
+    "isActive": true
   },
   {
     "id": "city",
@@ -42,7 +46,8 @@
     "price": 450,
     "imageKey": "city",
     "badge": "Community spaces",
-    "iconId": "city"
+    "iconId": "city",
+    "isActive": true
   },
   {
     "id": "road",
@@ -51,7 +56,8 @@
     "price": 380,
     "imageKey": "road",
     "badge": "Clean thoroughfares",
-    "iconId": "road"
+    "iconId": "road",
+    "isActive": true
   },
   {
     "id": "construction",
@@ -60,7 +66,8 @@
     "price": 320,
     "imageKey": "deep",
     "badge": "Dust & debris clearance",
-    "iconId": "deep"
+    "iconId": "deep",
+    "isActive": true
   },
   {
     "id": "moveout",
@@ -69,7 +76,8 @@
     "price": 220,
     "imageKey": "residential",
     "badge": "Ready for tenancy",
-    "iconId": "home"
+    "iconId": "home",
+    "isActive": true
   },
   {
     "id": "carpet",
@@ -78,6 +86,7 @@
     "price": 90,
     "imageKey": "office",
     "badge": "Steam soil extraction",
-    "iconId": "deep"
+    "iconId": "deep",
+    "isActive": true
   }
 ]
