@@ -47,6 +47,9 @@ export default function Layout({
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-500">
+            <Link to="/" className="hover:text-brand-green transition-colors">
+              Home
+            </Link>
             <Link to="/services" className="hover:text-brand-green transition-colors">
               Services
             </Link>
@@ -98,6 +101,13 @@ export default function Layout({
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-brand-border bg-white px-6 py-4 space-y-4 shadow-lg animate-in slide-in-from-top duration-200">
             <nav className="flex flex-col gap-3 font-semibold text-slate-600">
+              <Link
+                to="/"
+                onClick={handleNavClick}
+                className="py-2 border-b border-slate-50 hover:text-brand-green"
+              >
+                Home
+              </Link>
               <Link
                 to="/services"
                 onClick={handleNavClick}
