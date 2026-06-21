@@ -27,6 +27,7 @@ import residentialImg from '../assets/residential_clean.png';
 import officeImg from '../assets/office_clean.png';
 import deepImg from '../assets/deep_clean.png';
 import washroomImg from '../assets/washroom_clean.png';
+import BeforeAfterSlider from '../components/BeforeAfterSlider';
 
 /* ─── Stat Counter Component ─── */
 function StatCard({ value, label, icon: Icon, suffix = '' }) {
@@ -36,7 +37,8 @@ function StatCard({ value, label, icon: Icon, suffix = '' }) {
         <Icon className="w-6 h-6" />
       </div>
       <div className="text-3xl md:text-4xl font-display font-black text-brand-green">
-        {value}<span className="text-brand-orange">{suffix}</span>
+        {value}
+        <span className="text-brand-orange">{suffix}</span>
       </div>
       <div className="text-sm text-slate-500 font-semibold mt-1">{label}</div>
     </div>
@@ -88,7 +90,9 @@ function TestimonialCard({ name, role, text, rating, initials, color }) {
     <div className="bg-white border border-brand-border rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full ${color} flex items-center justify-center font-bold text-white text-sm`}>
+          <div
+            className={`w-10 h-10 rounded-full ${color} flex items-center justify-center font-bold text-white text-sm`}
+          >
             {initials}
           </div>
           <div>
@@ -207,7 +211,7 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
     {
       name: 'Priya Sharma',
       role: 'Property Manager, JBR',
-      text: 'Managed several properties and this is by far the best cleaning company I\'ve worked with. Always on time, great communication, and fair pricing. 5 stars every time!',
+      text: "Managed several properties and this is by far the best cleaning company I've worked with. Always on time, great communication, and fair pricing. 5 stars every time!",
       rating: 5,
       initials: 'PS',
       color: 'bg-purple-500',
@@ -295,7 +299,8 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
           </h1>
 
           <p className="text-base sm:text-lg text-slate-500 leading-relaxed max-w-xl">
-            Reliable, eco-friendly cleaning, maintenance, painting, and plumbing services for homes, offices, apartments, villas, and commercial properties across Dubai.
+            Reliable, eco-friendly cleaning, maintenance, painting, and plumbing services for homes,
+            offices, apartments, villas, and commercial properties across Dubai.
           </p>
 
           {/* CTA Buttons */}
@@ -344,7 +349,9 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
                 ))}
                 <span className="text-slate-800 font-bold text-xs ml-1.5">4.9 / 5.0</span>
               </div>
-              <span className="text-slate-400 text-xs font-medium">10,000+ satisfied customers</span>
+              <span className="text-slate-400 text-xs font-medium">
+                10,000+ satisfied customers
+              </span>
             </div>
           </div>
         </div>
@@ -366,7 +373,9 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
                 </div>
                 <div>
                   <div className="text-xs font-black text-slate-800">100% Satisfaction</div>
-                  <div className="text-[10px] text-slate-400 font-medium">Guaranteed or Free Reclean</div>
+                  <div className="text-[10px] text-slate-400 font-medium">
+                    Guaranteed or Free Reclean
+                  </div>
                 </div>
               </div>
             </div>
@@ -400,7 +409,8 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
               Tailored Services for Every Space
             </h2>
             <p className="text-slate-500 text-sm leading-relaxed">
-              From daily home care to large-scale commercial maintenance — we have the expertise, equipment, and team to handle any cleaning challenge in Dubai.
+              From daily home care to large-scale commercial maintenance — we have the expertise,
+              equipment, and team to handle any cleaning challenge in Dubai.
             </p>
           </div>
 
@@ -435,7 +445,8 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
                 The Standard Others <br /> Can't Match
               </h2>
               <p className="text-slate-500 leading-relaxed">
-                With 8+ years serving Dubai's most demanding properties, we've built a reputation for quality, reliability, and honesty that our competitors simply cannot replicate.
+                With 8+ years serving Dubai's most demanding properties, we've built a reputation
+                for quality, reliability, and honesty that our competitors simply cannot replicate.
               </p>
             </div>
 
@@ -459,7 +470,7 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
                 {
                   icon: Award,
                   title: 'Satisfaction Guarantee',
-                  desc: 'Not happy? We\'ll return and re-clean the area absolutely free of charge.',
+                  desc: "Not happy? We'll return and re-clean the area absolutely free of charge.",
                 },
                 {
                   icon: Zap,
@@ -494,7 +505,9 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
               <button
                 onClick={() => setIsAfter(false)}
                 className={`flex-grow py-3 rounded-lg font-bold text-sm transition-all cursor-pointer ${
-                  !isAfter ? 'bg-white text-brand-green shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                  !isAfter
+                    ? 'bg-white text-brand-green shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 Before Cleaning
@@ -502,63 +515,22 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
               <button
                 onClick={() => setIsAfter(true)}
                 className={`flex-grow py-3 rounded-lg font-bold text-sm transition-all cursor-pointer ${
-                  isAfter ? 'bg-brand-green text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'
+                  isAfter
+                    ? 'bg-brand-green text-white shadow-sm'
+                    : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 After Cleaning ✨
               </button>
             </div>
 
-            <div className="relative rounded-3xl overflow-hidden aspect-[16/10] border border-slate-200 shadow-xl bg-slate-100">
-              {/* BEFORE */}
-              <div
-                className={`absolute inset-0 transition-opacity duration-700 flex flex-col justify-end p-8 ${
-                  isAfter ? 'opacity-0 pointer-events-none' : 'opacity-100'
-                }`}
-                style={{
-                  backgroundImage:
-                    'linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.85)), url("https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80")',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
-              >
-                <span className="absolute top-5 left-5 px-3 py-1.5 rounded-lg bg-brand-orange text-white text-xs font-bold uppercase tracking-widest">
-                  Before
-                </span>
-                <h3 className="text-2xl font-bold text-white font-display">Messy & Dusty Environments</h3>
-                <p className="text-slate-300 text-sm mt-1">Stained surfaces, cluttered rooms, and accumulated dust.</p>
-              </div>
-
-              {/* AFTER */}
-              <div
-                className={`absolute inset-0 transition-opacity duration-700 flex flex-col justify-end p-8 ${
-                  isAfter ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                }`}
-                style={{
-                  backgroundImage:
-                    'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.75)), url("https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80")',
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  filter: 'saturate(1.15) brightness(1.1)',
-                }}
-              >
-                <div className="absolute top-5 left-1/3 w-7 h-7 animate-pulse text-yellow-300">
-                  <Sparkles className="w-full h-full" />
-                </div>
-                <div className="absolute top-10 right-1/4 w-8 h-8 animate-bounce text-yellow-200">
-                  <Sparkles className="w-full h-full" />
-                </div>
-                <span className="absolute top-5 left-5 px-3 py-1.5 rounded-lg bg-brand-green text-white text-xs font-bold uppercase tracking-widest">
-                  After ✨
-                </span>
-                <h3 className="text-2xl font-bold text-white font-display">Sanitized & Sparkling Clean</h3>
-                <p className="text-slate-200 text-sm mt-1">Disinfected counters, organized furniture, completely dust-free air.</p>
-              </div>
-            </div>
+            <BeforeAfterSlider isAfter={isAfter} setIsAfter={setIsAfter} />
 
             {/* Mini price list */}
             <div className="bg-brand-bg border border-brand-border rounded-2xl p-5 space-y-3">
-              <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Starting Prices</div>
+              <div className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">
+                Starting Prices
+              </div>
               {(services || []).slice(0, 4).map((s) => (
                 <div key={s.id} className="flex justify-between items-center text-sm">
                   <span className="text-slate-600 font-medium">{s.title}</span>
@@ -643,7 +615,8 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
               What Our Clients Say
             </h2>
             <p className="text-slate-500 text-sm leading-relaxed">
-              Over 10,000 satisfied clients across Dubai trust us to maintain their homes and businesses.
+              Over 10,000 satisfied clients across Dubai trust us to maintain their homes and
+              businesses.
             </p>
           </div>
 
@@ -729,7 +702,6 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
           </div>
         </div>
       </section>
-
     </>
   );
 }
