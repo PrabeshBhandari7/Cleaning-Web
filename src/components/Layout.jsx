@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { Menu, X, Phone, Mail, MapPin } from 'lucide-react';
+import WhatsAppWidget from './WhatsAppWidget';
 
 export default function Layout({
   CleanLogo,
@@ -168,6 +169,8 @@ export default function Layout({
         <Outlet />
       </main>
 
+      <WhatsAppWidget />
+
       {/* FOOTER */}
       <footer className="bg-white border-t border-brand-border py-16 text-slate-500">
         <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12 mb-12">
@@ -259,7 +262,12 @@ export default function Layout({
 
         {/* Copyright and Legal links */}
         <div className="max-w-7xl mx-auto px-6 border-t border-slate-100 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-          <p>© {new Date().getFullYear()} Platinum Smile Building Cleaning Services LLC. All rights reserved.</p>
+          <div className="space-y-1">
+            <p>© {new Date().getFullYear()} Platinum Smile Building Cleaning Services LLC. All rights reserved.</p>
+            <p className="text-[8px] text-slate-300">
+              Dubai DED Trade License No: <span className="text-slate-400 font-bold">[YOUR_LICENSE_NO]</span> | TRN: <span className="text-slate-400 font-bold">[YOUR_TRN_NO]</span>
+            </p>
+          </div>
           <div className="flex gap-6">
             <a href="http://www.platinumsmilecleaning.com" className="hover:text-slate-600 transition-colors">
               www.platinumsmilecleaning.com

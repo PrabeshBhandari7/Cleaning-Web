@@ -1,9 +1,15 @@
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import { User, Sparkles, Check, Clock, ShieldCheck, Briefcase, MapPin } from 'lucide-react';
 
 export default function About() {
   return (
     <>
+      <Helmet>
+        <title>About Us | Platinum Smile Dubai</title>
+        <meta name="description" content="Learn more about Platinum Smile Building Cleaning Services LLC, our reliable team, and why we are trusted across Dubai for quality workmanship." />
+      </Helmet>
+
       {/* ABOUT US */}
       <section className="bg-brand-bg py-20 border-y border-brand-border">
         <div className="max-w-4xl mx-auto px-6 text-center space-y-6">

@@ -34,6 +34,7 @@ import About from './pages/About';
 import ServicesPage from './pages/Services';
 import Blogs from './pages/Blogs';
 import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
 
 
 
@@ -258,8 +259,9 @@ function App() {
     phone: '',
     email: '',
     serviceType: 'residential',
-    propertyType: 'villa',
+    propertyType: 'apartment',
     message: '',
+    addons: [],
   });
 
   const [calculatedPrice, setCalculatedPrice] = useState(120);
@@ -405,9 +407,17 @@ function App() {
     if (formData.propertyType === 'commercial') sizeMultiplier = 2.0;
     if (formData.propertyType === 'warehouse') sizeMultiplier = 2.5;
 
-    let discount = 1.0;
+    let base = basePrice * sizeMultiplier;
+    
+    // Calculate addons
+    if (formData.addons && formData.addons.length > 0) {
+      if (formData.addons.includes('fridge')) base += 50;
+      if (formData.addons.includes('oven')) base += 50;
+      if (formData.addons.includes('balcony')) base += 100;
+      if (formData.addons.includes('windows')) base += 150;
+    }
 
-    return Math.round(basePrice * sizeMultiplier * discount);
+    return Math.round(base);
   };
 
   // Recalculate price on select change
@@ -460,6 +470,7 @@ function App() {
           serviceType: formData.serviceType,
           propertyType: formData.propertyType,
           message: formData.message,
+          addons: formData.addons,
           totalPrice: calculatedPrice,
         }),
       });
@@ -822,6 +833,7 @@ function App() {
           <Route path="/services" element={<ServicesPage services={services} formatPrice={formatPrice} setFormData={setFormData} setFormHighlight={setFormHighlight} nameInputRef={nameInputRef} />} />
           <Route path="/blogs" element={<Blogs blogList={blogList} setSelectedBlog={setSelectedBlog} />} />
           <Route path="/contact" element={<Contact formData={formData} handleInputChange={handleInputChange} handleBookingSubmit={handleBookingSubmit} services={services} formHighlight={formHighlight} bookingPlaced={bookingPlaced} setBookingPlaced={setBookingPlaced} placedBookingDetails={placedBookingDetails} setFormData={setFormData} formatPrice={formatPrice} nameInputRef={nameInputRef} />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
 
