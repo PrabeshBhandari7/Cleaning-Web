@@ -22,6 +22,7 @@ import {
   Droplet,
   Trash2,
   BookOpen,
+  Zap,
 } from 'lucide-react';
 
 import { sendBookingNotification } from './services/emailService';
@@ -91,19 +92,19 @@ const CleanLogo = () => (
 const getIconById = (id) => {
   switch (id) {
     case 'home':
-      return <Home className="w-5 h-5 text-white" />;
+      return Home;
     case 'office':
-      return <Briefcase className="w-5 h-5 text-white" />;
+      return Briefcase;
     case 'deep':
-      return <Sparkles className="w-5 h-5 text-white" />;
+      return Sparkles;
     case 'washroom':
-      return <Droplet className="w-5 h-5 text-white" />;
+      return Droplet;
     case 'city':
-      return <MapPin className="w-5 h-5 text-white" />;
+      return MapPin;
     case 'road':
-      return <Trash2 className="w-5 h-5 text-white" />;
+      return Zap;
     default:
-      return <Sparkles className="w-5 h-5 text-white" />;
+      return Sparkles;
   }
 };
 
@@ -141,7 +142,7 @@ const defaultServicesList = [
     imageKey: 'city',
     badge: 'Complete Building Care',
     iconId: 'city',
-    icon: <MapPin className="w-5 h-5 text-white" />,
+    icon: MapPin,
   },
   {
     id: 'residential',
@@ -152,7 +153,7 @@ const defaultServicesList = [
     imageKey: 'residential',
     badge: 'Detailed home care',
     iconId: 'home',
-    icon: <Home className="w-5 h-5 text-white" />,
+    icon: Home,
   },
   {
     id: 'commercial',
@@ -163,7 +164,7 @@ const defaultServicesList = [
     imageKey: 'office',
     badge: 'Sanitized workplaces',
     iconId: 'office',
-    icon: <Briefcase className="w-5 h-5 text-white" />,
+    icon: Briefcase,
   },
   {
     id: 'deep',
@@ -174,7 +175,7 @@ const defaultServicesList = [
     imageKey: 'deep',
     badge: 'Pristine restoration',
     iconId: 'deep',
-    icon: <Sparkles className="w-5 h-5 text-white" />,
+    icon: Sparkles,
   },
   {
     id: 'moveout',
@@ -185,7 +186,7 @@ const defaultServicesList = [
     imageKey: 'washroom',
     badge: 'Ready for tenancy',
     iconId: 'home',
-    icon: <Home className="w-5 h-5 text-white" />,
+    icon: Home,
   },
   {
     id: 'painting',
@@ -196,7 +197,7 @@ const defaultServicesList = [
     imageKey: 'office',
     badge: 'Premium Finishes',
     iconId: 'deep',
-    icon: <Sparkles className="w-5 h-5 text-white" />,
+    icon: Sparkles,
   },
   {
     id: 'plumbing',
@@ -207,7 +208,7 @@ const defaultServicesList = [
     imageKey: 'washroom',
     badge: 'Expert Repairs',
     iconId: 'washroom',
-    icon: <Droplet className="w-5 h-5 text-white" />,
+    icon: Droplet,
   },
   {
     id: 'wallpaper',
@@ -218,7 +219,7 @@ const defaultServicesList = [
     imageKey: 'residential',
     badge: 'Aesthetic Upgrade',
     iconId: 'home',
-    icon: <Home className="w-5 h-5 text-white" />,
+    icon: Home,
   },
   {
     id: 'carpentry',
@@ -229,7 +230,7 @@ const defaultServicesList = [
     imageKey: 'deep',
     badge: 'Skilled Woodwork',
     iconId: 'office',
-    icon: <Briefcase className="w-5 h-5 text-white" />,
+    icon: Briefcase,
   },
   {
     id: 'plaster',
@@ -240,7 +241,7 @@ const defaultServicesList = [
     imageKey: 'city',
     badge: 'Smooth Surfaces',
     iconId: 'city',
-    icon: <MapPin className="w-5 h-5 text-white" />,
+    icon: MapPin,
   },
   {
     id: 'decorative',
@@ -251,7 +252,7 @@ const defaultServicesList = [
     imageKey: 'office',
     badge: 'Interior Elevation',
     iconId: 'deep',
-    icon: <Sparkles className="w-5 h-5 text-white" />,
+    icon: Sparkles,
   },
 ];
 
@@ -320,9 +321,10 @@ function App() {
   const fileInputRef = useRef(null);
 
   // Fetch helper to sync services with backend
-  const fetchServices = async () => {
+  const fetchServices = async (bypassCache = false) => {
     try {
-      const res = await fetch(`${API_BASE}/services`);
+      const url = bypassCache ? `${API_BASE}/services?t=${Date.now()}` : `${API_BASE}/services`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success && data.data) {
         // Store ALL services (including inactive) for admin panel
@@ -595,7 +597,7 @@ function App() {
       });
       const data = await res.json();
       if (data.success) {
-        fetchServices();
+        fetchServices(true);
       } else {
         alert(data.message || 'Failed to toggle listing state.');
       }
@@ -695,7 +697,7 @@ function App() {
       });
       const data = await res.json();
       if (data.success) {
-        fetchServices();
+        fetchServices(true);
         alert('Listing updated successfully!');
       } else {
         alert(data.message || 'Failed to update listing.');
@@ -722,7 +724,7 @@ function App() {
       });
       const data = await res.json();
       if (data.success) {
-        fetchServices();
+        fetchServices(true);
         if (formData.serviceType === serviceId) {
           const remaining = services.filter((s) => s.id !== serviceId);
           setFormData((prev) => ({ ...prev, serviceType: remaining[0].id }));
@@ -760,11 +762,11 @@ function App() {
       const data = await res.json();
       if (!data.success) {
         alert(data.message || 'Failed to update base rate on server.');
-        fetchServices();
+        fetchServices(true);
       }
     } catch (error) {
       console.error('Error updating service price:', error);
-      fetchServices();
+      fetchServices(true);
     }
   };
 
@@ -817,7 +819,7 @@ function App() {
       });
       const data = await res.json();
       if (data.success) {
-        fetchServices(); // Reload services from server
+        fetchServices(true); // Reload services from server
         // Reset fields
         setNewService({
           title: '',

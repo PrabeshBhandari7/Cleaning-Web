@@ -72,7 +72,7 @@ export default function Services({ services, formatPrice, setFormData, setFormHi
                   <div>
                     <div className="flex items-center gap-2 mb-1.5">
                       <div className="p-1.5 rounded-lg bg-white/10 backdrop-blur-md">
-                        {service.icon || <Sparkles className="w-5 h-5 text-white" />}
+                        {service.icon ? React.createElement(service.icon, { className: "w-5 h-5 text-white" }) : <Sparkles className="w-5 h-5 text-white" />}
                       </div>
                       <span className="text-[10px] text-cyan-300 font-bold uppercase tracking-wider">
                         {service.badge}
