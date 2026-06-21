@@ -240,11 +240,31 @@ export default function Layout({
               Service Areas
             </h4>
             <ul className="space-y-3 text-xs font-semibold">
-              <li>Dubai, UAE</li>
-              <li>Residential Homes</li>
-              <li>Commercial Buildings</li>
-              <li>Warehouses & Offices</li>
-              <li>Villas & Apartments</li>
+              <li>
+                <Link to="/contact" className="hover:text-brand-orange transition-colors">
+                  Dubai, UAE
+                </Link>
+              </li>
+              <li>
+                <Link to="/services" className="hover:text-brand-orange transition-colors">
+                  Residential Homes
+                </Link>
+              </li>
+              <li>
+                <Link to="/services" className="hover:text-brand-orange transition-colors">
+                  Commercial Buildings
+                </Link>
+              </li>
+              <li>
+                <Link to="/services" className="hover:text-brand-orange transition-colors">
+                  Warehouses & Offices
+                </Link>
+              </li>
+              <li>
+                <Link to="/services" className="hover:text-brand-orange transition-colors">
+                  Villas & Apartments
+                </Link>
+              </li>
             </ul>
           </div>
 
