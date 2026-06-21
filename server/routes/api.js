@@ -1,164 +1,116 @@
 /**
  * api.js — Secure API Routes
  *
- * Public routes:   GET  /api/services, GET /api/bookings, POST /api/bookings
- * Protected routes: POST/PUT/DELETE on services and PUT/DELETE on bookings
- *   → require Authorization: Bearer <ADMIN_SECRET_TOKEN>
+ * Auth:      POST /api/auth/login   — returns JWT
+ *            GET  /api/auth/verify  — verifies JWT
+ * Public:    GET  /api/services
+ *            POST /api/bookings
+ * Protected: GET  /api/bookings         ← admin only (PII protection)
+ *            POST/PUT/DELETE /api/services  ← admin only
+ *            PUT/DELETE /api/bookings    ← admin only
  */
 
-const express = require('express');
-const router = express.Router();
+const express    = require('express');
+const router     = express.Router();
+const rateLimit  = require('express-rate-limit');
 const { body, param } = require('express-validator');
 
+const { adminLogin, verifyToken } = require('../controllers/authController');
 const {
-  calculateQuote,
-  getBookings,
-  createBooking,
-  updateBooking,
-  deleteBooking,
+  calculateQuote, getBookings, createBooking, updateBooking, deleteBooking,
 } = require('../controllers/bookingController');
-
 const {
-  getServices,
-  createService,
-  updateService,
-  deleteService,
+  getServices, createService, updateService, deleteService,
 } = require('../controllers/serviceController');
 
 const adminAuth = require('../middleware/adminAuth');
-const validate = require('../middleware/validate');
+const validate  = require('../middleware/validate');
+
+// ─── Rate Limiters ────────────────────────────────────────────────────────────
+
+// Strict limiter for auth login attempts (prevents brute force)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts. Try again after 15 minutes.' },
+});
+
+// Booking submission limiter (prevents spam)
+const bookingLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many booking requests. Please try again in an hour.' },
+});
 
 // ─── Validation Rule Sets ─────────────────────────────────────────────────────
 
 const bookingCreateRules = [
-  body('name')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Name must be a string up to 100 characters.'),
-  body('email')
-    .optional()
-    .isEmail()
-    .normalizeEmail()
-    .withMessage('Please provide a valid email address.'),
-  body('phone')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 30 })
-    .withMessage('Phone must be a string up to 30 characters.'),
-  body('serviceType')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 60 })
-    .withMessage('Service type must be a string up to 60 characters.'),
-  body('totalPrice')
-    .optional()
-    .isFloat({ min: 0, max: 100000 })
-    .withMessage('Total price must be a positive number.'),
-  body('message')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Message must be under 1000 characters.'),
+  body('name').optional().isString().trim().isLength({ max: 100 }),
+  body('email').optional().isEmail().normalizeEmail(),
+  body('phone').optional().isString().trim().isLength({ max: 30 }),
+  body('serviceType').optional().isString().trim().isLength({ max: 60 }),
+  body('totalPrice').optional().isFloat({ min: 0, max: 100000 }),
+  body('message').optional().isString().trim().isLength({ max: 1000 }),
 ];
 
 const bookingUpdateRules = [
-  param('id').isString().trim().notEmpty().withMessage('Booking ID is required.'),
-  body('status')
-    .optional()
-    .isIn(['scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled'])
-    .withMessage('Invalid status value.'),
-  body('cleaner')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 100 })
-    .withMessage('Cleaner name must be under 100 characters.'),
+  param('id').isString().trim().notEmpty(),
+  body('status').optional().isIn(['scheduled', 'confirmed', 'in-progress', 'completed', 'cancelled']),
+  body('cleaner').optional().isString().trim().isLength({ max: 100 }),
 ];
 
 const serviceCreateRules = [
-  body('title')
-    .isString()
-    .trim()
-    .notEmpty()
-    .isLength({ max: 100 })
-    .withMessage('Title is required and must be under 100 characters.'),
-  body('price')
-    .isFloat({ min: 0, max: 100000 })
-    .withMessage('Price must be a non-negative number.'),
-  body('desc')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage('Description must be under 500 characters.'),
-  body('badge')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 60 })
-    .withMessage('Badge must be under 60 characters.'),
-  body('iconId')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 30 }),
-  body('imageKey')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 5000000 }) // allow base64 images (max ~5MB)
-    .withMessage('Image key is too large.'),
+  body('title').isString().trim().notEmpty().isLength({ max: 100 }),
+  body('price').isFloat({ min: 0, max: 100000 }),
+  body('desc').optional().isString().trim().isLength({ max: 500 }),
+  body('badge').optional().isString().trim().isLength({ max: 60 }),
+  body('iconId').optional().isString().trim().isLength({ max: 30 }),
+  body('imageKey').optional().isString().trim().isLength({ max: 5000000 }),
 ];
 
 const serviceUpdateRules = [
-  param('id').isString().trim().notEmpty().withMessage('Service ID is required.'),
-  body('price')
-    .optional()
-    .isFloat({ min: 0, max: 100000 })
-    .withMessage('Price must be a non-negative number.'),
-  body('title')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 100 }),
-  body('desc')
-    .optional()
-    .isString()
-    .trim()
-    .isLength({ max: 500 }),
-  body('isActive')
-    .optional()
-    .isBoolean()
-    .withMessage('isActive must be a boolean value.'),
+  param('id').isString().trim().notEmpty(),
+  body('price').optional().isFloat({ min: 0, max: 100000 }),
+  body('title').optional().isString().trim().isLength({ max: 100 }),
+  body('desc').optional().isString().trim().isLength({ max: 500 }),
+  body('isActive').optional().isBoolean(),
 ];
 
 const idParamRule = [
-  param('id').isString().trim().notEmpty().withMessage('ID parameter is required.'),
+  param('id').isString().trim().notEmpty(),
 ];
+
+const loginRules = [
+  body('username').isString().trim().notEmpty().withMessage('Username is required.'),
+  body('password').isString().notEmpty().withMessage('Password is required.'),
+];
+
+// ─── Auth Routes ──────────────────────────────────────────────────────────────
+router.post('/auth/login',  loginLimiter, loginRules, validate, adminLogin);
+router.get('/auth/verify',  adminAuth, verifyToken);
 
 // ─── Quote Calculator (Public) ────────────────────────────────────────────────
 router.post(
   '/bookings/quote',
   [
-    body('squareFootage').isFloat({ min: 1 }).withMessage('Square footage must be a positive number.'),
-    body('cleaningType').optional().isIn(['standard', 'deep', 'moveout']).withMessage('Invalid cleaning type.'),
-    body('frequency').optional().isIn(['once', 'weekly', 'biweekly', 'monthly']).withMessage('Invalid frequency.'),
+    body('squareFootage').isFloat({ min: 1 }),
+    body('cleaningType').optional().isIn(['standard', 'deep', 'moveout']),
+    body('frequency').optional().isIn(['once', 'weekly', 'biweekly', 'monthly']),
   ],
   validate,
   calculateQuote
 );
 
 // ─── Bookings Routes ──────────────────────────────────────────────────────────
-// GET all bookings — public (admin will authenticate on the frontend)
-router.get('/bookings', getBookings);
+// GET all bookings — ADMIN ONLY (contains customer PII)
+router.get('/bookings', adminAuth, getBookings);
 
-// POST create booking — public (customers submit bookings from the contact form)
-router.post('/bookings', bookingCreateRules, validate, createBooking);
+// POST create booking — public (customers submit from contact form) with rate limit
+router.post('/bookings', bookingLimiter, bookingCreateRules, validate, createBooking);
 
 // PUT update booking — admin only
 router.put('/bookings/:id', adminAuth, bookingUpdateRules, validate, updateBooking);
@@ -167,8 +119,11 @@ router.put('/bookings/:id', adminAuth, bookingUpdateRules, validate, updateBooki
 router.delete('/bookings/:id', adminAuth, idParamRule, validate, deleteBooking);
 
 // ─── Services Routes ──────────────────────────────────────────────────────────
-// GET services — public
-router.get('/services', getServices);
+// GET services — public (with cache header for 60s)
+router.get('/services', (req, res, next) => {
+  res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+  next();
+}, getServices);
 
 // POST create service — admin only
 router.post('/services', adminAuth, serviceCreateRules, validate, createService);
