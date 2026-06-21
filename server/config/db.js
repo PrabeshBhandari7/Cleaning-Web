@@ -10,6 +10,7 @@ const defaultServices = [
     imageKey: 'residential',
     badge: 'Detailed home care',
     iconId: 'home',
+    isActive: true,
   },
   {
     id: 'office',
@@ -19,6 +20,7 @@ const defaultServices = [
     imageKey: 'office',
     badge: 'Sanitized workplaces',
     iconId: 'office',
+    isActive: true,
   },
   {
     id: 'deep',
@@ -28,6 +30,7 @@ const defaultServices = [
     imageKey: 'deep',
     badge: 'Pristine restoration',
     iconId: 'deep',
+    isActive: true,
   },
   {
     id: 'washroom',
@@ -37,6 +40,7 @@ const defaultServices = [
     imageKey: 'washroom',
     badge: 'Hygienic restrooms',
     iconId: 'washroom',
+    isActive: true,
   },
   {
     id: 'city',
@@ -46,6 +50,7 @@ const defaultServices = [
     imageKey: 'city',
     badge: 'Community spaces',
     iconId: 'city',
+    isActive: true,
   },
   {
     id: 'road',
@@ -55,6 +60,7 @@ const defaultServices = [
     imageKey: 'road',
     badge: 'Clean thoroughfares',
     iconId: 'road',
+    isActive: true,
   },
   {
     id: 'construction',
@@ -64,6 +70,7 @@ const defaultServices = [
     imageKey: 'deep',
     badge: 'Dust & debris clearance',
     iconId: 'deep',
+    isActive: true,
   },
   {
     id: 'moveout',
@@ -73,6 +80,7 @@ const defaultServices = [
     imageKey: 'residential',
     badge: 'Ready for tenancy',
     iconId: 'home',
+    isActive: true,
   },
   {
     id: 'carpet',
@@ -82,6 +90,7 @@ const defaultServices = [
     imageKey: 'office',
     badge: 'Steam soil extraction',
     iconId: 'deep',
+    isActive: true,
   },
 ];
 
