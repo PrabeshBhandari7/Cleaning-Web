@@ -26,12 +26,16 @@ import {
 
 import { sendBookingNotification } from './services/emailService';
 
-// Admin API token — must match ADMIN_SECRET_TOKEN in server/.env
-const ADMIN_TOKEN = 'platinumsmile-admin-secret-2024';
-const ADMIN_HEADERS = {
+// API base URL — single source of truth
+const API_BASE = 'http://localhost:5000/api';
+
+// In-memory JWT store (NOT localStorage — prevents XSS token theft)
+// The token is lost on page refresh, requiring the admin to log in again (intentional)
+let _adminJwt = null;
+const getAdminHeaders = () => ({
   'Content-Type': 'application/json',
-  'Authorization': `Bearer ${ADMIN_TOKEN}`,
-};
+  'Authorization': `Bearer ${_adminJwt}`,
+});
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -294,7 +298,11 @@ function App() {
   const [bookings, setBookings] = useState([]);
 
   // Dynamic Service State from Backend API
-  const [services, setServices] = useState(defaultServicesList);
+  // allServices: full list including inactive (used by admin panel)
+  // services: only active services (used by public pages)
+  const [allServices, setAllServices] = useState(defaultServicesList);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const services = allServices.filter((s) => s.isActive !== false);
 
   // New service form fields inside admin dashboard
   const [newService, setNewService] = useState({
@@ -314,10 +322,11 @@ function App() {
   // Fetch helper to sync services with backend
   const fetchServices = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/services');
+      const res = await fetch(`${API_BASE}/services`);
       const data = await res.json();
       if (data.success && data.data) {
-        setServices(
+        // Store ALL services (including inactive) for admin panel
+        setAllServices(
           data.data.map((s) => ({
             ...s,
             icon: getIconById(s.iconId),
@@ -327,13 +336,16 @@ function App() {
       }
     } catch (error) {
       console.error('Error fetching services:', error);
+    } finally {
+      setServicesLoading(false);
     }
   };
 
-  // Fetch helper to sync bookings with backend
+  // Fetch helper to sync bookings with backend (admin only — requires JWT)
   const fetchBookings = async () => {
+    if (!_adminJwt) return;
     try {
-      const res = await fetch('http://localhost:5000/api/bookings');
+      const res = await fetch(`${API_BASE}/bookings`, { headers: getAdminHeaders() });
       const data = await res.json();
       if (data.success && data.data) {
         setBookings(data.data);
@@ -550,27 +562,40 @@ function App() {
     }
   }, [logoClickCount]);
 
-  const handleAdminLoginSubmit = (username, password) => {
-    if (username === 'admin' && password === 'admin123') {
-      setIsAdminLoggedIn(true);
-      setShowAdminLogin(false);
-      setShowAdminDashboard(true);
-      setAdminError('');
-    } else {
-      setAdminError('Invalid credentials. Authorized Admin only.');
+  // Admin login — calls the backend API, receives JWT, stores in memory
+  const handleAdminLoginSubmit = async (username, password) => {
+    try {
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await res.json();
+      if (data.success && data.token) {
+        _adminJwt = data.token; // store JWT in memory only
+        setIsAdminLoggedIn(true);
+        setShowAdminLogin(false);
+        setShowAdminDashboard(true);
+        setAdminError('');
+        fetchBookings(); // now we have a token, fetch bookings
+      } else {
+        setAdminError(data.message || 'Invalid credentials. Authorized Admin only.');
+      }
+    } catch (err) {
+      setAdminError('Network error. Please check your connection.');
     }
   };
 
   const handleToggleActiveState = async (serviceId, currentActiveState) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
+      const res = await fetch(`${API_BASE}/services/${serviceId}`, {
         method: 'PUT',
-        headers: ADMIN_HEADERS,
+        headers: getAdminHeaders(),
         body: JSON.stringify({ isActive: !currentActiveState }),
       });
       const data = await res.json();
       if (data.success) {
-        fetchServices(); // Refresh active services
+        fetchServices();
       } else {
         alert(data.message || 'Failed to toggle listing state.');
       }
@@ -620,9 +645,9 @@ function App() {
 
   const handleUpdateBooking = async (bookingId, updatedData) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}`, {
         method: 'PUT',
-        headers: ADMIN_HEADERS,
+        headers: getAdminHeaders(),
         body: JSON.stringify(updatedData),
       });
       const data = await res.json();
@@ -642,9 +667,9 @@ function App() {
 
   const handleDeleteBooking = async (bookingId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+      const res = await fetch(`${API_BASE}/bookings/${bookingId}`, {
         method: 'DELETE',
-        headers: ADMIN_HEADERS,
+        headers: getAdminHeaders(),
       });
       const data = await res.json();
       if (data.success) {
@@ -663,9 +688,9 @@ function App() {
 
   const handleEditServiceSubmit = async (serviceId, updatedData) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
+      const res = await fetch(`${API_BASE}/services/${serviceId}`, {
         method: 'PUT',
-        headers: ADMIN_HEADERS,
+        headers: getAdminHeaders(),
         body: JSON.stringify(updatedData),
       });
       const data = await res.json();
@@ -691,15 +716,13 @@ function App() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
+      const res = await fetch(`${API_BASE}/services/${serviceId}`, {
         method: 'DELETE',
-        headers: ADMIN_HEADERS,
+        headers: getAdminHeaders(),
       });
       const data = await res.json();
       if (data.success) {
-        // Refresh local list
         fetchServices();
-        // If active form service was deleted, fallback to remaining
         if (formData.serviceType === serviceId) {
           const remaining = services.filter((s) => s.id !== serviceId);
           setFormData((prev) => ({ ...prev, serviceType: remaining[0].id }));
@@ -715,7 +738,7 @@ function App() {
   // Admin function: Update a service's base price in local state (for fast responsive typing)
   const handleUpdatePrice = (serviceId, value) => {
     const numericValue = Number(value) || 0;
-    setServices((prev) =>
+    setAllServices((prev) =>
       prev.map((s) => {
         if (s.id === serviceId) {
           return { ...s, price: numericValue };
@@ -729,15 +752,15 @@ function App() {
   const handleSavePrice = async (serviceId, value) => {
     const numericValue = Number(value) || 0;
     try {
-      const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
+      const res = await fetch(`${API_BASE}/services/${serviceId}`, {
         method: 'PUT',
-        headers: ADMIN_HEADERS,
+        headers: getAdminHeaders(),
         body: JSON.stringify({ price: numericValue }),
       });
       const data = await res.json();
       if (!data.success) {
         alert(data.message || 'Failed to update base rate on server.');
-        fetchServices(); // revert
+        fetchServices();
       }
     } catch (error) {
       console.error('Error updating service price:', error);
@@ -778,9 +801,9 @@ function App() {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/services', {
+      const res = await fetch(`${API_BASE}/services`, {
         method: 'POST',
-        headers: ADMIN_HEADERS,
+        headers: getAdminHeaders(),
         body: JSON.stringify({
           title: newService.title,
           desc:
@@ -858,7 +881,7 @@ function App() {
           activeTab={adminActiveTab}
           setActiveTab={setAdminActiveTab}
           bookings={bookings}
-          services={services}
+          services={allServices}
           formatPrice={formatPrice}
           currency={currency}
           setCurrency={setCurrency}
