@@ -8,7 +8,16 @@ import {
   X
 } from 'lucide-react';
 
-export default function Sidebar({ activeTab, setActiveTab, onLogout, onClose, currency, setCurrency }) {
+export default function Sidebar({ 
+  activeTab, 
+  setActiveTab, 
+  onLogout, 
+  onClose, 
+  currency, 
+  setCurrency,
+  mobileOpen,
+  onCloseMobile
+}) {
   const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: LayoutGrid },
     { id: 'services', label: 'Listings', icon: ListTodo },
@@ -18,17 +27,36 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, onClose, cu
 
   return (
     <>
-      {/* 1. DESKTOP SIDEBAR (Visible on md and larger viewports) */}
-      <aside className="hidden md:flex w-64 bg-white border-r border-slate-100 flex-col justify-between shrink-0 p-6">
+      {/* Mobile Backdrop Overlay */}
+      {mobileOpen && (
+        <div 
+          className="md:hidden fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200"
+          onClick={onCloseMobile}
+        />
+      )}
+
+      {/* SIDEBAR (Responsive drawer on mobile, static on desktop) */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-100 flex flex-col justify-between shrink-0 p-6 transition-transform duration-300 md:static md:translate-x-0 ${
+        mobileOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         <div className="space-y-8">
           {/* Header Brand */}
-          <div className="flex items-center gap-2.5 px-2">
-            <div className="w-8 h-8 rounded-xl bg-brand-green flex items-center justify-center text-white font-display font-black text-sm">
-              M
+          <div className="flex items-center justify-between px-2">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-brand-green flex items-center justify-center text-white font-display font-black text-sm">
+                M
+              </div>
+              <span className="font-display font-black text-lg tracking-wide text-slate-800 uppercase">
+                Management
+              </span>
             </div>
-            <span className="font-display font-black text-lg tracking-wide text-slate-800 uppercase">
-              Management
-            </span>
+            {/* Mobile Close Button */}
+            <button 
+              onClick={onCloseMobile}
+              className="md:hidden p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-50 rounded-lg cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Navigation Items */}
@@ -45,6 +73,7 @@ export default function Sidebar({ activeTab, setActiveTab, onLogout, onClose, cu
                     key={item.id}
                     onClick={() => {
                       setActiveTab(item.id);
+                      if (onCloseMobile) onCloseMobile();
                     }}
                     className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all text-left cursor-pointer ${
                       isActive

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ChevronRight, Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import OverviewTab from './OverviewTab';
@@ -36,6 +37,8 @@ export default function AdminDashboard({
   onPhotoUpload,
   onAddServiceSubmit,
 }) {
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   return (
     <div className="fixed inset-0 z-50 bg-[#f8f9fd] flex flex-col md:flex-row overflow-hidden select-none">
       
@@ -47,6 +50,8 @@ export default function AdminDashboard({
         onClose={onClose}
         currency={currency}
         setCurrency={setCurrency}
+        mobileOpen={mobileSidebarOpen}
+        onCloseMobile={() => setMobileSidebarOpen(false)}
       />
 
       {/* MAIN CONTENT WORKSPACE */}
@@ -57,7 +62,10 @@ export default function AdminDashboard({
           
           {/* Left Title & Mobile Menu toggle */}
           <div className="flex items-center gap-3">
-            <button className="md:hidden p-1 text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer">
+            <button 
+              onClick={() => setMobileSidebarOpen(true)}
+              className="md:hidden p-1 text-slate-500 hover:bg-slate-100 rounded-lg cursor-pointer"
+            >
               <Menu className="w-5 h-5" />
             </button>
             <span className="font-display font-black text-lg text-slate-800 uppercase md:hidden tracking-wider">
