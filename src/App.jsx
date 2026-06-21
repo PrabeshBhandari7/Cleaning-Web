@@ -19,15 +19,15 @@ import {
   Mail,
   Menu,
   X,
-  Sliders,
-  DollarSign,
   Droplet,
   Trash2,
   BookOpen,
-  Lock,
-  Plus,
-  Edit2,
 } from 'lucide-react';
+
+import { sendBookingNotification } from './services/emailService';
+import AdminLogin from './components/admin/AdminLogin';
+import AdminDashboard from './components/admin/AdminDashboard';
+
 
 // Import images from assets
 import heroImg from './assets/hero_clean_space.png';
@@ -435,7 +435,7 @@ function App() {
       });
       const data = await res.json();
       if (data.success && data.data) {
-        setPlacedBookingDetails({
+        const details = {
           ...data.data,
           date: new Date(data.data.date).toLocaleDateString('en-US', {
             weekday: 'long',
@@ -443,8 +443,17 @@ function App() {
             month: 'long',
             day: 'numeric',
           }),
-        });
+        };
+        setPlacedBookingDetails(details);
         setBookingPlaced(true);
+
+        // Dispatch EmailJS email notification
+        try {
+          await sendBookingNotification(details);
+        } catch (emailErr) {
+          console.error('Email notification failed to dispatch:', emailErr);
+        }
+
         fetchBookings(); // sync state in admin panel
       } else {
         alert(data.message || 'Failed to register your quote.');
@@ -490,14 +499,11 @@ function App() {
     }
   }, [logoClickCount]);
 
-  const handleAdminLoginSubmit = (e) => {
-    e.preventDefault();
-    if (adminUsername === 'admin' && adminPassword === 'admin123') {
+  const handleAdminLoginSubmit = (username, password) => {
+    if (username === 'admin' && password === 'admin123') {
       setIsAdminLoggedIn(true);
       setShowAdminLogin(false);
       setShowAdminDashboard(true);
-      setAdminUsername('');
-      setAdminPassword('');
       setAdminError('');
     } else {
       setAdminError('Invalid credentials. Authorized Admin only.');
@@ -686,12 +692,19 @@ function App() {
             >
               Clean Living
             </a>
-            {isAdminLoggedIn && (
+            {isAdminLoggedIn ? (
               <button
                 onClick={() => setShowAdminDashboard(true)}
                 className="text-xs font-bold text-brand-orange bg-brand-orange/10 px-2.5 py-1 rounded-md border border-brand-orange/20 animate-pulse hover:bg-brand-orange hover:text-white transition-all cursor-pointer"
               >
                 Admin Panel
+              </button>
+            ) : (
+              <button
+                onClick={() => setShowAdminLogin(true)}
+                className="hover:text-brand-green transition-colors text-sm font-semibold text-slate-500 cursor-pointer"
+              >
+                Admin Portal
               </button>
             )}
           </nav>
@@ -757,15 +770,25 @@ function App() {
               >
                 Clean Living
               </a>
-              {isAdminLoggedIn && (
+              {isAdminLoggedIn ? (
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
                     setShowAdminDashboard(true);
                   }}
-                  className="py-2 border-t border-slate-100 text-left font-bold text-brand-orange"
+                  className="py-2 border-t border-slate-100 text-left font-bold text-brand-orange cursor-pointer animate-pulse"
                 >
                   Admin Control Panel
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setShowAdminLogin(true);
+                  }}
+                  className="py-2 border-t border-slate-100 text-left font-bold text-slate-500 hover:text-brand-green cursor-pointer"
+                >
+                  Admin Portal
                 </button>
               )}
             </nav>
@@ -1543,9 +1566,18 @@ function App() {
             <a href="#" className="hover:text-slate-600 transition-colors">
               Terms of Service
             </a>
-            <a href="#" className="hover:text-slate-600 transition-colors">
-              Vetted Portal
-            </a>
+            <button
+              onClick={() => {
+                if (isAdminLoggedIn) {
+                  setShowAdminDashboard(true);
+                } else {
+                  setShowAdminLogin(true);
+                }
+              }}
+              className="hover:text-slate-600 transition-colors cursor-pointer text-[10px] font-bold uppercase tracking-wider bg-transparent border-none p-0"
+            >
+              Admin Portal
+            </button>
           </div>
         </div>
       </footer>
@@ -1614,686 +1646,48 @@ function App() {
 
       {/* EASTER EGG ADMIN LOGIN MODAL */}
       {showAdminLogin && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-white/95 rounded-3xl p-8 max-w-sm w-full border border-slate-100 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.12)] space-y-6 animate-in fade-in zoom-in-95 duration-300">
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-brand-green/10 text-brand-green flex items-center justify-center mx-auto transition-transform hover:rotate-12 duration-300">
-                <Lock className="w-5 h-5" />
-              </div>
-              <h3 className="text-xl font-display font-black text-slate-800 tracking-tight">
-                Admin Panel Login
-              </h3>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                Authorized Personnel Only
-              </p>
-            </div>
-
-            {adminError && (
-              <div className="flex items-center gap-2 p-3.5 bg-rose-50 border border-rose-100 rounded-xl text-xs text-rose-600 font-semibold animate-pulse">
-                <ShieldCheck className="w-4 h-4 shrink-0 text-rose-500" />
-                <span>{adminError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleAdminLoginSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                  Username
-                </label>
-                <div className="relative flex items-center">
-                  <User className="absolute left-4 w-4 h-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={adminUsername}
-                    onChange={(e) => setAdminUsername(e.target.value)}
-                    placeholder="Enter admin username"
-                    required
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-brand-green focus:bg-white focus:ring-2 focus:ring-brand-green/10 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-                  Password
-                </label>
-                <div className="relative flex items-center">
-                  <Lock className="absolute left-4 w-4 h-4 text-slate-400" />
-                  <input
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-800 text-sm placeholder-slate-400 focus:outline-none focus:border-brand-green focus:bg-white focus:ring-2 focus:ring-brand-green/10 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAdminLogin(false);
-                    setAdminUsername('');
-                    setAdminPassword('');
-                    setAdminError('');
-                  }}
-                  className="flex-1 py-3 rounded-xl text-xs font-extrabold border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-all cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 rounded-xl text-xs font-extrabold bg-brand-green text-white hover:bg-brand-green-hover hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-brand-green/10 cursor-pointer"
-                >
-                  Verify Access
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AdminLogin
+          onSubmit={handleAdminLoginSubmit}
+          onCancel={() => {
+            setShowAdminLogin(false);
+            setAdminUsername('');
+            setAdminPassword('');
+            setAdminError('');
+          }}
+          error={adminError}
+        />
       )}
 
       {/* FULL ADMIN CONTROL PANEL DASHBOARD (ROBIN HOLESINSKY REFERENCE) */}
       {showAdminDashboard && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-slate-50 rounded-3xl w-full max-w-6xl border border-slate-200/60 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] flex flex-row my-8 h-[85vh] animate-in fade-in zoom-in-95 duration-300 overflow-hidden">
-            {/* SIDEBAR NAVIGATION */}
-            <aside className="w-64 bg-white border-r border-slate-200/60 flex flex-col justify-between shrink-0 p-6">
-              <div className="space-y-8">
-                {/* Brand Logo */}
-                <div className="flex items-center gap-2.5">
-                  <CleanLogo />
-                  <span className="font-display font-black text-lg tracking-wider text-slate-800 uppercase">
-                    Cleaning<span className="text-brand-orange">.Admin</span>
-                  </span>
-                </div>
-
-                {/* Nav Links */}
-                <nav className="flex flex-col gap-1 text-sm font-semibold text-slate-500">
-                  <button
-                    onClick={() => setAdminActiveTab('overview')}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left cursor-pointer ${
-                      adminActiveTab === 'overview'
-                        ? 'bg-slate-100 text-brand-green shadow-sm'
-                        : 'hover:bg-slate-50 hover:text-slate-800'
-                    }`}
-                  >
-                    <Sliders className="w-4 h-4" />
-                    <span>Overview</span>
-                  </button>
-                  <button
-                    onClick={() => setAdminActiveTab('services')}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left cursor-pointer ${
-                      adminActiveTab === 'services'
-                        ? 'bg-slate-100 text-brand-green shadow-sm'
-                        : 'hover:bg-slate-50 hover:text-slate-800'
-                    }`}
-                  >
-                    <Briefcase className="w-4 h-4" />
-                    <span>Active Services</span>
-                  </button>
-                  <button
-                    onClick={() => setAdminActiveTab('add-service')}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left cursor-pointer ${
-                      adminActiveTab === 'add-service'
-                        ? 'bg-slate-100 text-brand-green shadow-sm'
-                        : 'hover:bg-slate-50 hover:text-slate-800'
-                    }`}
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Add Service</span>
-                  </button>
-                  <button
-                    onClick={() => setAdminActiveTab('bookings')}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left cursor-pointer ${
-                      adminActiveTab === 'bookings'
-                        ? 'bg-slate-100 text-brand-green shadow-sm'
-                        : 'hover:bg-slate-50 hover:text-slate-800'
-                    }`}
-                  >
-                    <Calendar className="w-4 h-4" />
-                    <span>Bookings Log</span>
-                  </button>
-                </nav>
-              </div>
-
-              {/* Profile Card at bottom of sidebar */}
-              <div className="border-t border-slate-100 pt-4 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-brand-green text-white font-extrabold text-xs flex items-center justify-center shadow-md">
-                    AD
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-xs text-slate-800 leading-tight">
-                      Admin Manager
-                    </h5>
-                    <button
-                      onClick={() => {
-                        setIsAdminLoggedIn(false);
-                        setShowAdminDashboard(false);
-                      }}
-                      className="text-[10px] text-slate-400 font-semibold hover:text-red-500 transition-colors uppercase tracking-wider"
-                    >
-                      Log out
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </aside>
-
-            {/* CONTENT AREA */}
-            <main className="flex-grow p-8 overflow-y-auto bg-slate-50 flex flex-col">
-              {/* Content Header */}
-              <div className="flex items-center justify-between pb-6 border-b border-slate-200/60 mb-6 shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <button
-                    onClick={() => setShowAdminDashboard(false)}
-                    className="p-1 rounded-lg hover:bg-slate-200 transition-all text-slate-400 hover:text-slate-700 cursor-pointer"
-                    title="Back to website"
-                  >
-                    <ChevronRight className="w-5 h-5 rotate-180" />
-                  </button>
-                  <h2 className="text-xl font-display font-black text-slate-800 tracking-tight">
-                    {adminActiveTab === 'overview' && 'Overview'}
-                    {adminActiveTab === 'services' && 'Active Services'}
-                    {adminActiveTab === 'add-service' && 'Add Cleaning Type'}
-                    {adminActiveTab === 'bookings' && 'Bookings Log'}
-                  </h2>
-                </div>
-                <button
-                  onClick={() => setShowAdminDashboard(false)}
-                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 shadow-sm rounded-xl transition-all cursor-pointer"
-                >
-                  Close Panel
-                </button>
-              </div>
-
-              {/* Dynamic Views */}
-              <div className="flex-1 space-y-6">
-                {adminActiveTab === 'overview' && (
-                  <div className="space-y-6">
-                    {/* Stat Cards Row */}
-                    <div className="grid grid-cols-3 gap-6">
-                      {/* Stat 1 */}
-                      <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-2">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                          Total Revenue
-                        </span>
-                        <h3 className="text-3xl font-display font-black text-slate-800">
-                          {formatPrice(bookings.reduce((sum, b) => sum + b.totalPrice, 0))}
-                        </h3>
-                      </div>
-                      {/* Stat 2 */}
-                      <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-2">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                          Active Bookings
-                        </span>
-                        <h3 className="text-3xl font-display font-black text-slate-800">
-                          {bookings.filter((b) => b.status === 'scheduled').length}
-                        </h3>
-                      </div>
-                      {/* Stat 3 */}
-                      <div className="bg-white rounded-2xl p-6 border border-slate-200/50 shadow-sm space-y-2">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                          Service Categories
-                        </span>
-                        <h3 className="text-3xl font-display font-black text-slate-800">
-                          {services.length}
-                        </h3>
-                      </div>
-                    </div>
-
-                    {/* Secondary Row (Recent Bookings & Quick Pricing) */}
-                    <div className="grid lg:grid-cols-12 gap-6 items-start">
-                      {/* Left Side: Recent Bookings */}
-                      <div className="lg:col-span-8 bg-white border border-slate-200/50 rounded-2xl p-6 shadow-sm space-y-4">
-                        <h4 className="font-display font-black text-md text-slate-800 border-b border-slate-100 pb-2">
-                          Recent Bookings
-                        </h4>
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
-                                <th className="py-2.5">Customer</th>
-                                <th className="py-2.5">Service</th>
-                                <th className="py-2.5">Date</th>
-                                <th className="py-2.5 text-right">Amount</th>
-                                <th className="py-2.5 text-center">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50 font-medium text-slate-600">
-                              {bookings
-                                .slice(-5)
-                                .reverse()
-                                .map((b) => (
-                                  <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                                    <td className="py-3">
-                                      <div>
-                                        <span className="block font-bold text-slate-800">
-                                          {b.name}
-                                        </span>
-                                        <span className="block text-[10px] text-slate-400">
-                                          {b.email}
-                                        </span>
-                                      </div>
-                                    </td>
-                                    <td className="py-3 capitalize">
-                                      {services.find((s) => s.id === b.serviceType)?.title ||
-                                        b.serviceType}
-                                    </td>
-                                    <td className="py-3 text-slate-400">{b.date}</td>
-                                    <td className="py-3 text-right font-bold text-slate-800">
-                                      {formatPrice(b.totalPrice)}
-                                    </td>
-                                    <td className="py-3 text-center">
-                                      <span
-                                        className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${
-                                          b.status === 'scheduled'
-                                            ? 'bg-emerald-100 text-emerald-700'
-                                            : 'bg-slate-100 text-slate-600'
-                                        }`}
-                                      >
-                                        {b.status}
-                                      </span>
-                                    </td>
-                                  </tr>
-                                ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-
-                      {/* Right Side: Quick Pricing View */}
-                      <div className="lg:col-span-4 bg-white border border-slate-200/50 rounded-2xl p-6 shadow-sm space-y-4">
-                        <h4 className="font-display font-black text-md text-slate-800 border-b border-slate-100 pb-2">
-                          Pricing Quick View
-                        </h4>
-                        <div className="space-y-3.5">
-                          {services.slice(0, 5).map((s) => (
-                            <div key={s.id} className="flex justify-between items-center text-xs">
-                              <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-lg bg-brand-green flex items-center justify-center text-white shrink-0 shadow-sm">
-                                  {s.icon || <Sparkles className="w-3.5 h-3.5" />}
-                                </div>
-                                <span className="font-bold text-slate-700">{s.title}</span>
-                              </div>
-                              <span className="font-black text-brand-green">
-                                {formatPrice(s.price)}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {adminActiveTab === 'services' && (
-                  <div className="bg-white border border-slate-200/50 rounded-2xl p-6 shadow-sm space-y-4">
-                    <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                      <h4 className="font-display font-black text-md text-slate-800">
-                        Manage Active Services ({services.length})
-                      </h4>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                        Rates in Base USD ($)
-                      </span>
-                    </div>
-
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      {services.map((s) => (
-                        <div
-                          key={s.id}
-                          className="p-4 bg-slate-50 border border-slate-200/60 rounded-2xl flex justify-between items-center gap-4 hover:border-slate-300 transition-all shadow-sm"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-200 relative">
-                              <img
-                                src={s.image}
-                                alt={s.title}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div>
-                              <span className="text-[9px] text-brand-orange uppercase font-bold tracking-wider block">
-                                {s.badge}
-                              </span>
-                              <h5 className="font-display font-bold text-sm text-slate-800 leading-tight">
-                                {s.title}
-                              </h5>
-                              <p className="text-[10px] text-slate-400 line-clamp-1 max-w-[12rem]">
-                                {s.desc}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2.5 shrink-0">
-                            <div className="w-20">
-                              <label className="text-[8px] text-slate-400 uppercase font-bold block mb-0.5">
-                                Base ($)
-                              </label>
-                              <div className="relative rounded-lg border border-slate-200 bg-white px-2 py-0.5 flex items-center shadow-inner">
-                                <span className="text-xs text-slate-400 font-bold">$</span>
-                                <input
-                                  type="number"
-                                  value={s.price}
-                                  onChange={(e) => handleUpdatePrice(s.id, e.target.value)}
-                                  onBlur={(e) => handleSavePrice(s.id, e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      e.target.blur();
-                                    }
-                                  }}
-                                  className="w-full pl-0.5 bg-transparent text-xs font-black text-slate-700 focus:outline-none"
-                                  title="Press Enter or click away to save"
-                                />
-                              </div>
-                            </div>
-                            <button
-                              onClick={() => handleDeleteService(s.id)}
-                              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                              title="Delete Service"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {adminActiveTab === 'add-service' && (
-                  <div className="bg-white border border-slate-200/50 rounded-2xl p-6 shadow-sm max-w-xl">
-                    <h4 className="font-display font-black text-md text-slate-800 border-b border-slate-100 pb-2 mb-4">
-                      Add New Cleaning Category
-                    </h4>
-                    <form
-                      onSubmit={handleAddServiceSubmit}
-                      className="space-y-4 text-xs font-semibold text-slate-600"
-                    >
-                      <div className="grid md:grid-cols-2 gap-4">
-                        {/* Service Name */}
-                        <div className="space-y-1">
-                          <label>Service Name *</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="e.g., Washroom Sanitation"
-                            value={newService.title}
-                            onChange={(e) =>
-                              setNewService((prev) => ({ ...prev, title: e.target.value }))
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-brand-green text-sm"
-                          />
-                        </div>
-
-                        {/* Base Price */}
-                        <div className="space-y-1">
-                          <label>Base Price (USD $) *</label>
-                          <input
-                            type="number"
-                            required
-                            placeholder="e.g., 70"
-                            value={newService.price}
-                            onChange={(e) =>
-                              setNewService((prev) => ({ ...prev, price: e.target.value }))
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-brand-green text-sm"
-                          />
-                        </div>
-                      </div>
-
-                      <div className="grid md:grid-cols-3 gap-4">
-                        {/* Sub-Badge */}
-                        <div className="space-y-1">
-                          <label>Sub-Badge Text</label>
-                          <input
-                            type="text"
-                            placeholder="e.g., Deep sanitize"
-                            value={newService.badge}
-                            onChange={(e) =>
-                              setNewService((prev) => ({ ...prev, badge: e.target.value }))
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-brand-green text-sm"
-                          />
-                        </div>
-
-                        {/* Service Icon */}
-                        <div className="space-y-1">
-                          <label className="block">Service Icon</label>
-                          <select
-                            value={newService.iconId}
-                            onChange={(e) =>
-                              setNewService((prev) => ({ ...prev, iconId: e.target.value }))
-                            }
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-brand-green text-sm"
-                          >
-                            <option value="home">Home (Residential)</option>
-                            <option value="office">Briefcase (Office)</option>
-                            <option value="deep">Sparkles (Deep)</option>
-                            <option value="washroom">Droplet (Washroom)</option>
-                            <option value="city">MapPin (City)</option>
-                            <option value="road">Trash2 (Road)</option>
-                          </select>
-                        </div>
-
-                        {/* Image upload toggle */}
-                        <div className="space-y-1">
-                          <label className="block">Photo Source</label>
-                          <select
-                            value={photoSourceType}
-                            onChange={(e) => setPhotoSourceType(e.target.value)}
-                            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-brand-green text-sm"
-                          >
-                            <option value="predefined">Predefined Library</option>
-                            <option value="upload">Upload Custom Photo</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* Hidden general file input to be triggered via ref */}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          handlePhotoUpload(e);
-                          if (e.target.files && e.target.files[0]) {
-                            setPhotoSourceType('upload');
-                          }
-                          e.target.value = '';
-                        }}
-                        className="hidden"
-                      />
-
-                      {/* Conditionally show Photo Dropzone or predefined options */}
-                      <div className="space-y-1">
-                        <label className="block">Photo Selection *</label>
-                        {photoSourceType === 'predefined' ? (
-                          <div className="flex gap-2">
-                            <select
-                              value={newService.imageKey}
-                              onChange={(e) =>
-                                setNewService((prev) => ({ ...prev, imageKey: e.target.value }))
-                              }
-                              className="flex-1 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-brand-green text-sm"
-                            >
-                              <option value="residential">Cozy Bedroom (Residential)</option>
-                              <option value="office">Corporate Workplace (Office)</option>
-                              <option value="deep">Sparkling Counters (Deep Clean)</option>
-                              <option value="washroom">Clean Bathroom (Washroom)</option>
-                              <option value="city">Walkway Park (City Clean)</option>
-                              <option value="road">Street Sweeper (Road Clean)</option>
-                            </select>
-                            <button
-                              type="button"
-                              onClick={() => fileInputRef.current?.click()}
-                              className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 hover:text-slate-800 rounded-xl font-bold cursor-pointer text-xs transition-all flex items-center gap-1.5 shrink-0"
-                            >
-                              <Plus className="w-4 h-4 text-brand-orange" />
-                              Add Photo
-                            </button>
-                          </div>
-                        ) : (
-                          <div>
-                            {!uploadedBase64 ? (
-                              <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-6 bg-slate-50/20 hover:border-brand-green/45 hover:bg-slate-50/50 transition-all text-center flex flex-col items-center justify-center gap-2 group">
-                                <div className="p-2.5 bg-white rounded-xl shadow-sm border border-slate-100 group-hover:scale-110 transition-transform">
-                                  <Plus className="w-5 h-5 text-brand-orange" />
-                                </div>
-                                <div className="space-y-0.5">
-                                  <p className="text-[11px] font-bold text-slate-700">
-                                    Upload your custom cleaning category photo
-                                  </p>
-                                  <p className="text-[9px] text-slate-400 font-medium">
-                                    Supports JPG, PNG up to 2MB
-                                  </p>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => fileInputRef.current?.click()}
-                                  className="px-3.5 py-1.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-lg text-[10px] font-black transition-all shadow-sm cursor-pointer mt-1"
-                                >
-                                  Select Local Image
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="relative rounded-2xl overflow-hidden aspect-[16/10] border border-slate-200 bg-slate-100 shadow-sm">
-                                  <img
-                                    src={uploadedBase64}
-                                    alt="Preview"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div className="flex flex-col justify-center gap-2">
-                                  <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">
-                                    Custom Image Loaded
-                                  </div>
-                                  <div className="flex flex-col gap-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={() => fileInputRef.current?.click()}
-                                      className="px-3 py-2 bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 hover:text-slate-800 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                                    >
-                                      Change Photo
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setUploadedBase64('');
-                                        setPhotoSourceType('predefined');
-                                      }}
-                                      className="px-3 py-2 bg-red-50 hover:bg-red-100 border border-red-100 text-red-600 hover:text-red-700 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                                    >
-                                      Remove & Use Library
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Description */}
-                      <div className="space-y-1">
-                        <label>Service Description</label>
-                        <textarea
-                          placeholder="Brief description of the cleaning scope..."
-                          rows="3"
-                          value={newService.desc}
-                          onChange={(e) =>
-                            setNewService((prev) => ({ ...prev, desc: e.target.value }))
-                          }
-                          className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:outline-none focus:border-brand-green text-sm"
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="w-full py-3.5 rounded-xl bg-brand-orange text-white font-extrabold hover:bg-brand-orange-hover hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-1.5 shadow-md shadow-brand-orange/15 cursor-pointer"
-                      >
-                        <Plus className="w-4 h-4" /> Create Category
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {adminActiveTab === 'bookings' && (
-                  <div className="bg-white border border-slate-200/50 rounded-2xl p-6 shadow-sm space-y-4">
-                    <h4 className="font-display font-black text-md text-slate-800 border-b border-slate-100 pb-2">
-                      Full Bookings Database ({bookings.length})
-                    </h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead>
-                          <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
-                            <th className="py-3">Booking ID</th>
-                            <th className="py-3">Customer</th>
-                            <th className="py-3">Service Category</th>
-                            <th className="py-3">Area Size</th>
-                            <th className="py-3">Frequency</th>
-                            <th className="py-3">Date</th>
-                            <th className="py-3">Staff Pro</th>
-                            <th className="py-3 text-right">Total Price</th>
-                            <th className="py-3 text-center">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 font-medium text-slate-600">
-                          {[...bookings].reverse().map((b) => (
-                            <tr key={b.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="py-3.5 font-bold text-slate-700">{b.id}</td>
-                              <td className="py-3.5">
-                                <div>
-                                  <span className="block font-bold text-slate-800">{b.name}</span>
-                                  <span className="block text-[10px] text-slate-400">
-                                    {b.email}
-                                  </span>
-                                </div>
-                              </td>
-                              <td className="py-3.5 capitalize">
-                                {services.find((s) => s.id === b.serviceType)?.title ||
-                                  b.serviceType}
-                              </td>
-                              <td className="py-3.5 uppercase text-slate-500 font-bold">
-                                {b.size}
-                              </td>
-                              <td className="py-3.5 uppercase text-[10px] font-bold text-slate-500">
-                                {b.frequency}
-                              </td>
-                              <td className="py-3.5 text-slate-400">{b.date}</td>
-                              <td className="py-3.5 text-slate-500">{b.cleaner || 'Unassigned'}</td>
-                              <td className="py-3.5 text-right font-black text-slate-800">
-                                {formatPrice(b.totalPrice)}
-                              </td>
-                              <td className="py-3.5 text-center">
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide ${
-                                    b.status === 'scheduled'
-                                      ? 'bg-emerald-100 text-emerald-700'
-                                      : 'bg-slate-100 text-slate-600'
-                                  }`}
-                                >
-                                  {b.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </main>
-          </div>
-        </div>
+        <AdminDashboard
+          onClose={() => setShowAdminDashboard(false)}
+          activeTab={adminActiveTab}
+          setActiveTab={setAdminActiveTab}
+          bookings={bookings}
+          services={services}
+          formatPrice={formatPrice}
+          onLogout={() => {
+            setIsAdminLoggedIn(false);
+            setShowAdminDashboard(false);
+          }}
+          onUpdatePrice={handleUpdatePrice}
+          onSavePrice={handleSavePrice}
+          onDeleteService={handleDeleteService}
+          newService={newService}
+          setNewService={setNewService}
+          photoSourceType={photoSourceType}
+          setPhotoSourceType={setPhotoSourceType}
+          uploadedBase64={uploadedBase64}
+          setUploadedBase64={setUploadedBase64}
+          fileInputRef={fileInputRef}
+          onPhotoUpload={handlePhotoUpload}
+          onAddServiceSubmit={handleAddServiceSubmit}
+        />
       )}
     </div>
   );
 }
 
 export default App;
+
