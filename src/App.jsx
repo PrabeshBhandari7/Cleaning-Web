@@ -518,10 +518,12 @@ function App() {
 
   // 5 Clicks Admin Easter Egg trigger logic
   const handleLogoClick = (e) => {
-    e.preventDefault();
+    // Let the natural link navigate to '/' on a single click.
+    // Increment count.
     setLogoClickCount((prev) => {
       const nextCount = prev + 1;
       if (nextCount === 5) {
+        e.preventDefault(); // Prevent default link navigation only when triggering admin
         if (isAdminLoggedIn) {
           setShowAdminDashboard(true);
         } else {

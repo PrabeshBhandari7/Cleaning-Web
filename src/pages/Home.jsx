@@ -730,57 +730,6 @@ export default function Home({ services, formatPrice, isAfter, setIsAfter }) {
         </div>
       </section>
 
-      {/* ── FINAL CTA BANNER ── */}
-      <section className="py-20 bg-brand-green relative overflow-hidden">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-white blur-3xl -translate-x-1/2 -translate-y-1/2" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-white blur-3xl translate-x-1/2 translate-y-1/2" />
-        </div>
-
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white text-xs font-bold px-4 py-2 rounded-full border border-white/20 mb-6">
-            <Zap className="w-3.5 h-3.5 text-brand-orange" />
-            <span>Same-Day Booking Available</span>
-          </div>
-          <h2 className="text-3xl md:text-5xl font-display font-black text-white mb-4">
-            Ready for a{' '}
-            <span className="text-brand-orange">Cleaner Space?</span>
-          </h2>
-          <p className="text-green-100 text-base leading-relaxed mb-8 max-w-xl mx-auto">
-            Join 10,000+ satisfied clients across Dubai. Book today and experience the Cleaning.Web difference — professional, reliable, and always spotless.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/contact"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-brand-orange text-white font-bold text-sm hover:bg-brand-orange-hover shadow-lg shadow-brand-orange/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-            >
-              Get Free Quote Today <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a
-              href="https://wa.me/971562314576"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border-2 border-white text-white font-bold text-sm hover:bg-white hover:text-brand-green transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <MessageCircle className="w-4 h-4" /> WhatsApp Us
-            </a>
-          </div>
-
-          {/* Trust indicators */}
-          <div className="flex flex-wrap justify-center gap-6 mt-10 text-white/70 text-xs font-semibold">
-            {['No Hidden Fees', 'Free Cancellation', 'Eco-Friendly Products', '100% Satisfaction Guaranteed'].map(
-              (item) => (
-                <span key={item} className="flex items-center gap-1.5">
-                  <Check className="w-3.5 h-3.5 text-brand-orange" />
-                  {item}
-                </span>
-              )
-            )}
-          </div>
-        </div>
-      </section>
     </>
   );
 }
