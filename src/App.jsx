@@ -510,6 +510,131 @@ function App() {
     }
   };
 
+  const handleToggleActiveState = async (serviceId, currentActiveState) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentActiveState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchServices(); // Refresh active services
+      } else {
+        alert(data.message || 'Failed to toggle listing state.');
+      }
+    } catch (error) {
+      console.error('Error toggling active state:', error);
+    }
+  };
+
+  const handleAddMockBooking = async () => {
+    const names = ['Sarah Jenkins', 'Marcus Thorne', 'Elena Rodriguez', 'Jordan Smith', 'Maria Alvez', 'Robert King', 'Lisa Wong'];
+    const selectedName = names[Math.floor(Math.random() * names.length)];
+    const servicesList = services.map(s => s.id);
+    const serviceType = servicesList[Math.floor(Math.random() * servicesList.length)] || 'deep';
+    const randomPrice = Math.floor(Math.random() * 300) + 100;
+    const date = `2026-06-${Math.floor(Math.random() * 10) + 20}`;
+    
+    try {
+      const res = await fetch('http://localhost:5000/api/bookings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: selectedName,
+          email: `${selectedName.toLowerCase().replace(' ', '')}@example.com`,
+          serviceType: serviceType,
+          size: '2-3bed',
+          frequency: 'weekly',
+          totalPrice: randomPrice,
+          status: 'confirmed',
+          date: date,
+          cleaner: 'Staff Allocated'
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchBookings();
+        alert('Mock Booking added successfully!');
+      } else {
+        alert(data.message || 'Failed to add mock booking.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error adding mock booking.');
+    }
+  };
+
+  const handleUpdateBooking = async (bookingId, updatedData) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchBookings();
+        return true;
+      } else {
+        alert(data.message || 'Failed to update booking.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error updating booking:', error);
+      alert('Network error updating booking.');
+      return false;
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/bookings/${bookingId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchBookings();
+        return true;
+      } else {
+        alert(data.message || 'Failed to delete booking.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error deleting booking:', error);
+      alert('Network error deleting booking.');
+      return false;
+    }
+  };
+
+  const handleEditServiceSubmit = async (serviceId, updatedData) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/services/${serviceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedData),
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchServices();
+        alert('Listing updated successfully!');
+      } else {
+        alert(data.message || 'Failed to update listing.');
+      }
+    } catch (error) {
+      console.error('Error updating service:', error);
+      alert('Network error updating listing.');
+    }
+  };
+
   // Admin function: Delete a service type (Backend Connected)
   const handleDeleteService = async (serviceId) => {
     if (services.length <= 1) {
@@ -692,19 +817,12 @@ function App() {
             >
               Clean Living
             </a>
-            {isAdminLoggedIn ? (
+            {isAdminLoggedIn && (
               <button
                 onClick={() => setShowAdminDashboard(true)}
                 className="text-xs font-bold text-brand-orange bg-brand-orange/10 px-2.5 py-1 rounded-md border border-brand-orange/20 animate-pulse hover:bg-brand-orange hover:text-white transition-all cursor-pointer"
               >
                 Admin Panel
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowAdminLogin(true)}
-                className="hover:text-brand-green transition-colors text-sm font-semibold text-slate-500 cursor-pointer"
-              >
-                Admin Portal
               </button>
             )}
           </nav>
@@ -770,7 +888,7 @@ function App() {
               >
                 Clean Living
               </a>
-              {isAdminLoggedIn ? (
+              {isAdminLoggedIn && (
                 <button
                   onClick={() => {
                     setMobileMenuOpen(false);
@@ -779,16 +897,6 @@ function App() {
                   className="py-2 border-t border-slate-100 text-left font-bold text-brand-orange cursor-pointer animate-pulse"
                 >
                   Admin Control Panel
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setShowAdminLogin(true);
-                  }}
-                  className="py-2 border-t border-slate-100 text-left font-bold text-slate-500 hover:text-brand-green cursor-pointer"
-                >
-                  Admin Portal
                 </button>
               )}
             </nav>
@@ -1566,18 +1674,16 @@ function App() {
             <a href="#" className="hover:text-slate-600 transition-colors">
               Terms of Service
             </a>
-            <button
-              onClick={() => {
-                if (isAdminLoggedIn) {
+            {isAdminLoggedIn && (
+              <button
+                onClick={() => {
                   setShowAdminDashboard(true);
-                } else {
-                  setShowAdminLogin(true);
-                }
-              }}
-              className="hover:text-slate-600 transition-colors cursor-pointer text-[10px] font-bold uppercase tracking-wider bg-transparent border-none p-0"
-            >
-              Admin Portal
-            </button>
+                }}
+                className="hover:text-slate-600 transition-colors cursor-pointer text-[10px] font-bold uppercase tracking-wider bg-transparent border-none p-0 text-brand-orange animate-pulse"
+              >
+                Admin Panel
+              </button>
+            )}
           </div>
         </div>
       </footer>
@@ -1667,10 +1773,17 @@ function App() {
           bookings={bookings}
           services={services}
           formatPrice={formatPrice}
+          currency={currency}
+          setCurrency={setCurrency}
           onLogout={() => {
             setIsAdminLoggedIn(false);
             setShowAdminDashboard(false);
           }}
+          onToggleActiveState={handleToggleActiveState}
+          onAddMockBooking={handleAddMockBooking}
+          onUpdateBooking={handleUpdateBooking}
+          onDeleteBooking={handleDeleteBooking}
+          onEditServiceSubmit={handleEditServiceSubmit}
           onUpdatePrice={handleUpdatePrice}
           onSavePrice={handleSavePrice}
           onDeleteService={handleDeleteService}

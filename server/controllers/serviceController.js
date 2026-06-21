@@ -34,6 +34,7 @@ exports.createService = (req, res) => {
       badge: badge || 'Special service',
       iconId: iconId || 'deep',
       imageKey: imageKey || 'deep',
+      isActive: true,
     };
 
     mockDatabase.services.push(created);
@@ -76,6 +77,9 @@ exports.updateService = (req, res) => {
     }
     if (imageKey !== undefined) {
       mockDatabase.services[serviceIndex].imageKey = imageKey;
+    }
+    if (req.body.isActive !== undefined) {
+      mockDatabase.services[serviceIndex].isActive = !!req.body.isActive;
     }
 
     saveServicesToFile();
