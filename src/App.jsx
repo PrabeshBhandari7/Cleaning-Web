@@ -423,6 +423,7 @@ function App() {
   // Recalculate price on select change
   useEffect(() => {
     setCalculatedPrice(calculatePrice());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData, services]);
 
   const handleInputChange = (e) => {
