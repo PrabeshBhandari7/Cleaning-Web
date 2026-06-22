@@ -113,8 +113,8 @@ router.get('/bookings', adminAuth, getBookings);
 // POST create booking — public (customers submit from contact form) with rate limit
 router.post('/bookings', bookingLimiter, bookingCreateRules, validate, createBooking);
 
-// PUT update booking — admin only
-router.put('/bookings/:id', adminAuth, bookingUpdateRules, validate, updateBooking);
+// PATCH update booking — admin only
+router.patch('/bookings/:id', adminAuth, bookingUpdateRules, validate, updateBooking);
 
 // DELETE booking — admin only
 router.delete('/bookings/:id', adminAuth, idParamRule, validate, deleteBooking);
@@ -129,8 +129,8 @@ router.get('/services', (req, res, next) => {
 // POST create service — admin only
 router.post('/services', adminAuth, serviceCreateRules, validate, createService);
 
-// PUT update service — admin only
-router.put('/services/:id', adminAuth, serviceUpdateRules, validate, updateService);
+// PATCH update service — admin only
+router.patch('/services/:id', adminAuth, serviceUpdateRules, validate, updateService);
 
 // DELETE service — admin only
 router.delete('/services/:id', adminAuth, idParamRule, validate, deleteService);

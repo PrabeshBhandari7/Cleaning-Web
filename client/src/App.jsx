@@ -27,16 +27,15 @@ import {
 
 // EmailJS removed in favor of backend Nodemailer
 
-// API base URL — single source of truth
-const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://platinumsmilecleaning.com/api' : 'http://localhost:5000/api');
+import api, { setAdminToken, getAdminToken } from './config/axios';
 
-// In-memory JWT store (NOT localStorage — prevents XSS token theft)
-// The token is lost on page refresh, requiring the admin to log in again (intentional)
-let _adminJwt = null;
-const getAdminHeaders = () => ({
-  'Content-Type': 'application/json',
-  'Authorization': `Bearer ${_adminJwt}`,
-});
+const getAdminHeaders = () => {
+  const token = getAdminToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
+};
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -320,9 +319,9 @@ function App() {
   // Fetch helper to sync services with backend
   const fetchServices = async (bypassCache = false) => {
     try {
-      const url = bypassCache ? `${API_BASE}/services?t=${Date.now()}` : `${API_BASE}/services`;
-      const res = await fetch(url);
-      const data = await res.json();
+      const url = bypassCache ? `/services?t=${Date.now()}` : `/services`;
+      const res = await api.get(url);
+      const data = res.data;
       if (data.success && data.data) {
         // Store ALL services (including inactive) for admin panel
         setAllServices(
@@ -342,10 +341,10 @@ function App() {
 
   // Fetch helper to sync bookings with backend (admin only — requires JWT)
   const fetchBookings = async () => {
-    if (!_adminJwt) return;
+    if (!getAdminToken()) return;
     try {
-      const res = await fetch(`${API_BASE}/bookings`, { headers: getAdminHeaders() });
-      const data = await res.json();
+      const res = await api.get('/bookings');
+      const data = res.data;
       if (data.success && data.data) {
         setBookings(data.data);
       }
@@ -478,24 +477,18 @@ function App() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
-          email: formData.email,
-          serviceType: formData.serviceType,
-          propertyType: formData.propertyType,
-          message: formData.message,
-          addons: formData.addons,
-          totalPrice: calculatedPrice,
-        }),
+      const res = await api.post('/bookings', {
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        serviceType: formData.serviceType,
+        propertyType: formData.propertyType,
+        message: formData.message,
+        addons: formData.addons,
+        totalPrice: calculatedPrice,
       });
-      const data = await res.json();
-      if (res.ok && data.success && data.data) {
+      const data = res.data;
+      if (data.success && data.data) {
         const details = {
           ...data.data,
           date: new Date(data.data.date).toLocaleDateString('en-US', {
@@ -557,14 +550,10 @@ function App() {
   // Admin login — calls the backend API, receives JWT, stores in memory
   const handleAdminLoginSubmit = async (username, password) => {
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await res.json();
+      const res = await api.post('/auth/login', { username, password });
+      const data = res.data;
       if (data.success && data.token) {
-        _adminJwt = data.token; // store JWT in memory only
+        setAdminToken(data.token); // store JWT via axios config
         setIsAdminLoggedIn(true);
         setAdminError('');
         fetchBookings(); // now we have a token, fetch bookings
@@ -592,12 +581,8 @@ function App() {
 
   const handleToggleActiveState = async (serviceId, currentActiveState) => {
     try {
-      const res = await fetch(`${API_BASE}/services/${serviceId}`, {
-        method: 'PUT',
-        headers: getAdminHeaders(),
-        body: JSON.stringify({ isActive: !currentActiveState }),
-      });
-      const data = await res.json();
+      const res = await api.patch(`/services/${serviceId}`, { isActive: !currentActiveState });
+      const data = res.data;
       if (data.success) {
         fetchServices(true);
       } else {
@@ -621,24 +606,18 @@ function App() {
     const date = `2026-06-${Math.floor(Math.random() * 10) + 20}`;
 
     try {
-      const res = await fetch(`${API_BASE}/bookings`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: selectedName,
-          email: `${selectedName.toLowerCase().replace(' ', '')}@example.com`,
-          serviceType: serviceType,
-          size: '2-3bed',
-          frequency: 'weekly',
-          totalPrice: randomPrice,
-          status: 'confirmed',
-          date: date,
-          cleaner: 'Staff Allocated'
-        }),
+      const res = await api.post('/bookings', {
+        name: selectedName,
+        email: `${selectedName.toLowerCase().replace(' ', '')}@example.com`,
+        serviceType: serviceType,
+        size: '2-3bed',
+        frequency: 'weekly',
+        totalPrice: randomPrice,
+        status: 'confirmed',
+        date: date,
+        cleaner: 'Staff Allocated'
       });
-      const data = await res.json();
+      const data = res.data;
       if (data.success) {
         fetchBookings();
         alert('Mock Booking added successfully!');
@@ -667,12 +646,8 @@ function App() {
 
   const handleUpdateBooking = async (bookingId, updatedData) => {
     try {
-      const res = await fetch(`${API_BASE}/bookings/${bookingId}`, {
-        method: 'PUT',
-        headers: getAdminHeaders(),
-        body: JSON.stringify(updatedData),
-      });
-      const data = await res.json();
+      const res = await api.patch(`/bookings/${bookingId}`, updatedData);
+      const data = res.data;
       if (data.success) {
         fetchBookings();
         return true;
@@ -690,11 +665,8 @@ function App() {
 
   const handleDeleteBooking = async (bookingId) => {
     try {
-      const res = await fetch(`${API_BASE}/bookings/${bookingId}`, {
-        method: 'DELETE',
-        headers: getAdminHeaders(),
-      });
-      const data = await res.json();
+      const res = await api.delete(`/bookings/${bookingId}`);
+      const data = res.data;
       if (data.success) {
         fetchBookings();
         return true;
@@ -712,12 +684,8 @@ function App() {
 
   const handleEditServiceSubmit = async (serviceId, updatedData) => {
     try {
-      const res = await fetch(`${API_BASE}/services/${serviceId}`, {
-        method: 'PUT',
-        headers: getAdminHeaders(),
-        body: JSON.stringify(updatedData),
-      });
-      const data = await res.json();
+      const res = await api.patch(`/services/${serviceId}`, updatedData);
+      const data = res.data;
       if (data.success) {
         fetchServices(true);
         alert('Listing updated successfully!');
@@ -742,11 +710,8 @@ function App() {
       return;
     }
     try {
-      const res = await fetch(`${API_BASE}/services/${serviceId}`, {
-        method: 'DELETE',
-        headers: getAdminHeaders(),
-      });
-      const data = await res.json();
+      const res = await api.delete(`/services/${serviceId}`);
+      const data = res.data;
       if (data.success) {
         fetchServices(true);
         if (formData.serviceType === serviceId) {
@@ -784,12 +749,8 @@ function App() {
   const handleSavePrice = async (serviceId, value) => {
     const numericValue = Number(value) || 0;
     try {
-      const res = await fetch(`${API_BASE}/services/${serviceId}`, {
-        method: 'PUT',
-        headers: getAdminHeaders(),
-        body: JSON.stringify({ price: numericValue }),
-      });
-      const data = await res.json();
+      const res = await api.patch(`/services/${serviceId}`, { price: numericValue });
+      const data = res.data;
       if (!data.success) {
         alert(data.message || 'Failed to update base rate on server.');
         fetchServices(true);
@@ -833,21 +794,17 @@ function App() {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/services`, {
-        method: 'POST',
-        headers: getAdminHeaders(),
-        body: JSON.stringify({
-          title: newService.title,
-          desc:
-            newService.desc ||
-            'Premium custom cleaning service tailored by workspace administrator.',
-          price: priceNum,
-          badge: newService.badge || 'Professional service',
-          iconId: newService.iconId,
-          imageKey: finalImageKey,
-        }),
+      const res = await api.post('/services', {
+        title: newService.title,
+        desc:
+          newService.desc ||
+          'Premium custom cleaning service tailored by workspace administrator.',
+        price: priceNum,
+        badge: newService.badge || 'Professional service',
+        iconId: newService.iconId,
+        imageKey: finalImageKey,
       });
-      const data = await res.json();
+      const data = res.data;
       if (data.success) {
         fetchServices(true); // Reload services from server
         // Reset fields

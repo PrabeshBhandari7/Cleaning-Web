@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import api from '../../config/axios';
 
-export default function SettingsTab({ getAdminHeaders, onLogout }) {
+export default function SettingsTab({ onLogout }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -9,8 +10,7 @@ export default function SettingsTab({ getAdminHeaders, onLogout }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // API base URL — single source of truth
-  const API_BASE = 'http://localhost:5000/api';
+  // No need for API_BASE here, using global axios config
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,18 +30,14 @@ export default function SettingsTab({ getAdminHeaders, onLogout }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_BASE}/auth/password`, {
-        method: 'PUT',
-        headers: getAdminHeaders(),
-        body: JSON.stringify({
-          currentPassword,
-          newPassword
-        })
+      const res = await api.put('/auth/password', {
+        currentPassword,
+        newPassword
       });
 
-      const data = await res.json();
+      const data = res.data;
 
-      if (res.ok && data.success) {
+      if (data.success) {
         setSuccess('Password changed successfully. Logging out in 2 seconds...');
         setCurrentPassword('');
         setNewPassword('');
