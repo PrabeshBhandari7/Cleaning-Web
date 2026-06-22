@@ -508,7 +508,8 @@ function App() {
       }
     } catch (err) {
       console.error('Error placing booking quote:', err);
-      alert('Network error placing booking quote. Please verify your connection.');
+      const exactError = err.response?.data?.message || err.message || 'Network error placing booking quote. Please verify your connection.';
+      alert(exactError);
     } finally {
       setIsSubmitting(false);
     }
