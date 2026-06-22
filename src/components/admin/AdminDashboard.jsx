@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronRight, Menu } from 'lucide-react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import OverviewTab from './OverviewTab';
 import ServicesTab from './ServicesTab';
@@ -10,8 +11,6 @@ import SettingsTab from './SettingsTab';
 
 export default function AdminDashboard({
   onClose,
-  activeTab,
-  setActiveTab,
   bookings,
   services,
   formatPrice,
@@ -40,16 +39,20 @@ export default function AdminDashboard({
   getAdminHeaders,
 }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Extract active path segment for breadcrumbs
+  const pathSegments = location.pathname.split('/');
+  const currentPath = pathSegments[pathSegments.length - 1];
 
   return (
     <div className="fixed inset-0 z-50 bg-[#f8f9fd] flex flex-col md:flex-row overflow-hidden select-none">
       
       {/* SIDEBAR NAVIGATION */}
       <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
         onLogout={onLogout}
-        onClose={onClose}
+        onClose={() => navigate('/')}
         currency={currency}
         setCurrency={setCurrency}
         mobileOpen={mobileSidebarOpen}
@@ -95,75 +98,73 @@ export default function AdminDashboard({
           <div className="flex items-center gap-1 text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">
             <span>Management</span>
             <ChevronRight className="w-3 h-3 text-slate-300" />
-            <span className="text-brand-green font-extrabold">
-              {activeTab === 'overview' && 'Dashboard'}
-              {activeTab === 'services' && 'Listings'}
-              {activeTab === 'bookings' && 'Bookings'}
-              {activeTab === 'rates' && 'Rates'}
-              {activeTab === 'add-service' && 'Add Listing'}
-              {activeTab === 'settings' && 'Settings'}
+            <span className="text-brand-green font-extrabold capitalize">
+              {currentPath.replace('-', ' ')}
             </span>
           </div>
 
           {/* Render Active View */}
-          {activeTab === 'overview' && (
-            <OverviewTab
-              bookings={bookings}
-              services={services}
-              formatPrice={formatPrice}
-              setActiveTab={setActiveTab}
-            />
-          )}
+          <Routes>
+            <Route index element={<Navigate to="overview" replace />} />
+            
+            <Route path="overview" element={
+              <OverviewTab
+                bookings={bookings}
+                services={services}
+                formatPrice={formatPrice}
+              />
+            } />
 
-          {activeTab === 'services' && (
-            <ServicesTab
-              services={services}
-              onToggleActiveState={onToggleActiveState}
-              onDeleteService={onDeleteService}
-              onEditServiceSubmit={onEditServiceSubmit}
-              onGoToAddTab={() => setActiveTab('add-service')}
-              formatPrice={formatPrice}
-            />
-          )}
+            <Route path="services" element={
+              <ServicesTab
+                services={services}
+                onToggleActiveState={onToggleActiveState}
+                onDeleteService={onDeleteService}
+                onEditServiceSubmit={onEditServiceSubmit}
+                onGoToAddTab={() => navigate('/admin/dashboard/add-service')}
+                formatPrice={formatPrice}
+              />
+            } />
 
-          {activeTab === 'rates' && (
-            <RatesTab
-              services={services}
-              onUpdatePrice={onUpdatePrice}
-              onSavePrice={onSavePrice}
-              formatPrice={formatPrice}
-              currency={currency}
-            />
-          )}
+            <Route path="rates" element={
+              <RatesTab
+                services={services}
+                onUpdatePrice={onUpdatePrice}
+                onSavePrice={onSavePrice}
+                formatPrice={formatPrice}
+                currency={currency}
+              />
+            } />
 
-          {activeTab === 'bookings' && (
-            <BookingsTab
-              bookings={bookings}
-              services={services}
-              formatPrice={formatPrice}
-              onAddMockBooking={onAddMockBooking}
-              onUpdateBooking={onUpdateBooking}
-              onDeleteBooking={onDeleteBooking}
-            />
-          )}
+            <Route path="bookings" element={
+              <BookingsTab
+                bookings={bookings}
+                services={services}
+                formatPrice={formatPrice}
+                onAddMockBooking={onAddMockBooking}
+                onUpdateBooking={onUpdateBooking}
+                onDeleteBooking={onDeleteBooking}
+              />
+            } />
 
-          {activeTab === 'add-service' && (
-            <AddServiceTab
-              newService={newService}
-              setNewService={setNewService}
-              photoSourceType={photoSourceType}
-              setPhotoSourceType={setPhotoSourceType}
-              uploadedBase64={uploadedBase64}
-              setUploadedBase64={setUploadedBase64}
-              fileInputRef={fileInputRef}
-              onPhotoUpload={onPhotoUpload}
-              onSubmit={onAddServiceSubmit}
-            />
-          )}
+            <Route path="add-service" element={
+              <AddServiceTab
+                newService={newService}
+                setNewService={setNewService}
+                photoSourceType={photoSourceType}
+                setPhotoSourceType={setPhotoSourceType}
+                uploadedBase64={uploadedBase64}
+                setUploadedBase64={setUploadedBase64}
+                fileInputRef={fileInputRef}
+                onPhotoUpload={onPhotoUpload}
+                onSubmit={onAddServiceSubmit}
+              />
+            } />
 
-          {activeTab === 'settings' && (
-            <SettingsTab getAdminHeaders={getAdminHeaders} onLogout={onLogout} />
-          )}
+            <Route path="settings" element={
+              <SettingsTab getAdminHeaders={getAdminHeaders} onLogout={onLogout} />
+            } />
+          </Routes>
         </div>
 
       </main>
