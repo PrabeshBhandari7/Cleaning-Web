@@ -15,7 +15,7 @@ const router     = express.Router();
 const rateLimit  = require('express-rate-limit');
 const { body, param } = require('express-validator');
 
-const { adminLogin, verifyToken } = require('../controllers/authController');
+const { adminLogin, verifyToken, changePassword } = require('../controllers/authController');
 const {
   calculateQuote, getBookings, createBooking, updateBooking, deleteBooking,
 } = require('../controllers/bookingController');
@@ -37,13 +37,13 @@ const loginLimiter = rateLimit({
   message: { success: false, message: 'Too many login attempts. Try again after 15 minutes.' },
 });
 
-// Booking submission limiter (prevents spam)
+// Booking submission limiter (prevents spam: max 5 bookings per IP per day)
 const bookingLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 8,
+  windowMs: 24 * 60 * 60 * 1000, // 24 hours
+  max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message: 'Too many booking requests. Please try again in an hour.' },
+  message: { success: false, message: 'You have reached the maximum limit of 5 bookings per day from this IP address. Please try again tomorrow.' },
 });
 
 // ─── Validation Rule Sets ─────────────────────────────────────────────────────
@@ -92,6 +92,7 @@ const loginRules = [
 // ─── Auth Routes ──────────────────────────────────────────────────────────────
 router.post('/auth/login',  loginLimiter, loginRules, validate, adminLogin);
 router.get('/auth/verify',  adminAuth, verifyToken);
+router.put('/auth/password', adminAuth, changePassword);
 
 // ─── Quote Calculator (Public) ────────────────────────────────────────────────
 router.post(
