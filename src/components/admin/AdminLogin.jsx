@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import { Lock, User, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-export default function AdminLogin({ onSubmit, onCancel, error }) {
+export default function AdminLogin({ onSubmit, error, setAdminError }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(username, password);
+    await onSubmit(username, password);
+  };
+
+  const handleCancel = () => {
+    setAdminError && setAdminError('');
+    navigate('/');
   };
 
   return (
@@ -74,7 +81,7 @@ export default function AdminLogin({ onSubmit, onCancel, error }) {
           <div className="flex gap-3 pt-3">
             <button
               type="button"
-              onClick={onCancel}
+              onClick={handleCancel}
               className="flex-grow py-3 rounded-xl text-xs font-extrabold border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 transition-all cursor-pointer shadow-sm"
             >
               Back
