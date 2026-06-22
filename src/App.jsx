@@ -39,7 +39,7 @@ const getAdminHeaders = () => ({
 });
 import AdminLogin from './components/admin/AdminLogin';
 import AdminDashboard from './components/admin/AdminDashboard';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/Home';
 import About from './pages/About';
@@ -47,6 +47,7 @@ import ServicesPage from './pages/Services';
 import Blogs from './pages/Blogs';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
+import BlogDetail from './pages/BlogDetail';
 
 
 
@@ -265,7 +266,6 @@ function App() {
   // Before/After State
   const [isAfter, setIsAfter] = useState(true);
 
-  // Booking Form State
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -277,6 +277,7 @@ function App() {
   });
 
   const [calculatedPrice, setCalculatedPrice] = useState(120);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingPlaced, setBookingPlaced] = useState(false);
   const [placedBookingDetails, setPlacedBookingDetails] = useState(null);
   const [formHighlight, setFormHighlight] = useState(false);
@@ -289,14 +290,10 @@ function App() {
 
   // Admin Security & Dashboard State
   const [logoClickCount, setLogoClickCount] = useState(0);
-  const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [adminUsername, setAdminUsername] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [adminError, setAdminError] = useState('');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const [adminActiveTab, setAdminActiveTab] = useState('overview'); // 'overview' | 'services' | 'add-service' | 'bookings'
+  const [adminError, setAdminError] = useState('');
   const [bookings, setBookings] = useState([]);
+  const [adminActiveTab, setAdminActiveTab] = useState('overview'); // 'overview' | 'services' | 'add-service' | 'bookings'
 
   // Dynamic Service State from Backend API
   // allServices: full list including inactive (used by admin panel)
@@ -479,8 +476,9 @@ function App() {
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      const res = await fetch('http://localhost:5000/api/bookings', {
+      const res = await fetch(`${API_BASE}/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -497,7 +495,7 @@ function App() {
         }),
       });
       const data = await res.json();
-      if (data.success && data.data) {
+      if (res.ok && data.success && data.data) {
         const details = {
           ...data.data,
           date: new Date(data.data.date).toLocaleDateString('en-US', {
@@ -518,6 +516,8 @@ function App() {
     } catch (err) {
       console.error('Error placing booking quote:', err);
       alert('Network error placing booking quote. Please verify your connection.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -539,11 +539,7 @@ function App() {
       const nextCount = prev + 1;
       if (nextCount === 5) {
         e.preventDefault(); // Prevent default link navigation only when triggering admin
-        if (isAdminLoggedIn) {
-          setShowAdminDashboard(true);
-        } else {
-          setShowAdminLogin(true);
-        }
+        window.location.href = '/admin/dashboard';
         return 0; // Reset count
       }
       return nextCount;
@@ -570,12 +566,12 @@ function App() {
       if (data.success && data.token) {
         _adminJwt = data.token; // store JWT in memory only
         setIsAdminLoggedIn(true);
-        setShowAdminLogin(false);
-        setShowAdminDashboard(true);
         setAdminError('');
         fetchBookings(); // now we have a token, fetch bookings
+        return true;
       } else {
         setAdminError(data.message || 'Invalid credentials. Authorized Admin only.');
+        return false;
       }
     } catch (err) {
       // Fallback for offline/demo mode using env variables
@@ -585,11 +581,11 @@ function App() {
       if (mockUser && mockPass && username === mockUser && password === mockPass) {
         _adminJwt = 'mock-jwt-token';
         setIsAdminLoggedIn(true);
-        setShowAdminLogin(false);
-        setShowAdminDashboard(true);
         setAdminError('');
+        return true;
       } else {
         setAdminError('Network error. Please check your connection.');
+        return false;
       }
     }
   };
@@ -625,7 +621,7 @@ function App() {
     const date = `2026-06-${Math.floor(Math.random() * 10) + 20}`;
 
     try {
-      const res = await fetch('http://localhost:5000/api/bookings', {
+      const res = await fetch(`${API_BASE}/bookings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -904,8 +900,6 @@ function App() {
             CleanLogo={CleanLogo}
             handleLogoClick={handleLogoClick}
             isAdminLoggedIn={isAdminLoggedIn}
-            setShowAdminDashboard={setShowAdminDashboard}
-            setShowAdminLogin={setShowAdminLogin}
             currency={currency}
             setCurrency={setCurrency}
             mobileMenuOpen={mobileMenuOpen}
@@ -916,93 +910,68 @@ function App() {
           <Route path="/" element={<HomePage services={services} formatPrice={formatPrice} isAfter={isAfter} setIsAfter={setIsAfter} />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<ServicesPage services={services} formatPrice={formatPrice} setFormData={setFormData} setFormHighlight={setFormHighlight} nameInputRef={nameInputRef} />} />
-          <Route path="/blogs" element={<Blogs blogList={blogList} setSelectedBlog={setSelectedBlog} />} />
-          <Route path="/contact" element={<Contact formData={formData} handleInputChange={handleInputChange} handleBookingSubmit={handleBookingSubmit} services={services} formHighlight={formHighlight} bookingPlaced={bookingPlaced} setBookingPlaced={setBookingPlaced} placedBookingDetails={placedBookingDetails} setFormData={setFormData} formatPrice={formatPrice} nameInputRef={nameInputRef} />} />
+          <Route path="/blogs" element={<Blogs blogList={blogList} />} />
+          <Route path="/contact" element={<Contact
+                    formData={formData}
+                    handleInputChange={handleInputChange}
+                    handleBookingSubmit={handleBookingSubmit}
+                    services={services}
+                    formHighlight={formHighlight}
+                    bookingPlaced={bookingPlaced}
+                    setBookingPlaced={setBookingPlaced}
+                    placedBookingDetails={placedBookingDetails}
+                    setFormData={setFormData}
+                    formatPrice={formatPrice}
+                    nameInputRef={nameInputRef}
+                    isSubmitting={isSubmitting} />} />
+          <Route path="/blogs/:id" element={<BlogDetail blogList={blogList} />} />
           <Route path="*" element={<NotFound />} />
         </Route>
+
+        {/* Admin Login */}
+        <Route path="/admin/login" element={
+          isAdminLoggedIn ? <Navigate to="/admin/dashboard" replace /> :
+          <AdminLogin
+            onSubmit={handleAdminLoginSubmit}
+            error={adminError}
+            setAdminError={setAdminError}
+          />
+        } />
+
+        {/* Admin Dashboard Protected Routes */}
+        <Route path="/admin/dashboard/*" element={
+          isAdminLoggedIn ? (
+            <AdminDashboard
+              bookings={bookings}
+              services={allServices}
+              formatPrice={formatPrice}
+              currency={currency}
+              setCurrency={setCurrency}
+              onLogout={() => {
+                setIsAdminLoggedIn(false);
+              }}
+              onToggleActiveState={handleToggleActiveState}
+              onAddMockBooking={handleAddMockBooking}
+              onUpdateBooking={handleUpdateBooking}
+              onDeleteBooking={handleDeleteBooking}
+              onEditServiceSubmit={handleEditServiceSubmit}
+              onUpdatePrice={handleUpdatePrice}
+              onSavePrice={handleSavePrice}
+              onDeleteService={handleDeleteService}
+              newService={newService}
+              setNewService={setNewService}
+              photoSourceType={photoSourceType}
+              setPhotoSourceType={setPhotoSourceType}
+              uploadedBase64={uploadedBase64}
+              setUploadedBase64={setUploadedBase64}
+              fileInputRef={fileInputRef}
+              onPhotoUpload={handlePhotoUpload}
+              onAddServiceSubmit={handleAddServiceSubmit}
+              getAdminHeaders={getAdminHeaders}
+            />
+          ) : <Navigate to="/admin/login" replace />
+        } />
       </Routes>
-
-      {/* Admin Login Modal */}
-      {showAdminLogin && (
-        <AdminLogin
-          onSubmit={handleAdminLoginSubmit}
-          onCancel={() => {
-            setShowAdminLogin(false);
-            setAdminError('');
-          }}
-          error={adminError}
-        />
-      )}
-
-      {/* Admin Dashboard Overlay */}
-      {showAdminDashboard && (
-        <AdminDashboard
-          onClose={() => setShowAdminDashboard(false)}
-          activeTab={adminActiveTab}
-          setActiveTab={setAdminActiveTab}
-          bookings={bookings}
-          services={allServices}
-          formatPrice={formatPrice}
-          currency={currency}
-          setCurrency={setCurrency}
-          onLogout={() => {
-            setIsAdminLoggedIn(false);
-            setShowAdminDashboard(false);
-          }}
-          onToggleActiveState={handleToggleActiveState}
-          onAddMockBooking={handleAddMockBooking}
-          onUpdateBooking={handleUpdateBooking}
-          onDeleteBooking={handleDeleteBooking}
-          onEditServiceSubmit={handleEditServiceSubmit}
-          onUpdatePrice={handleUpdatePrice}
-          onSavePrice={handleSavePrice}
-          onDeleteService={handleDeleteService}
-          newService={newService}
-          setNewService={setNewService}
-          photoSourceType={photoSourceType}
-          setPhotoSourceType={setPhotoSourceType}
-          uploadedBase64={uploadedBase64}
-          setUploadedBase64={setUploadedBase64}
-          fileInputRef={fileInputRef}
-          onPhotoUpload={handlePhotoUpload}
-          onAddServiceSubmit={handleAddServiceSubmit}
-          getAdminHeaders={getAdminHeaders}
-        />
-      )}
-
-      {/* Blog Detail Overlay Modal */}
-      {selectedBlog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
-            onClick={() => setSelectedBlog(null)}
-          ></div>
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-300">
-            <button
-              onClick={() => setSelectedBlog(null)}
-              className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-md rounded-full text-slate-500 hover:text-slate-800 hover:bg-white shadow-sm transition-all z-10"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="h-64 sm:h-80 relative bg-slate-100">
-              <img src={selectedBlog.image} alt={selectedBlog.title} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-              <h2 className="absolute bottom-6 left-6 right-6 text-2xl sm:text-4xl font-display font-black text-white leading-tight">
-                {selectedBlog.title}
-              </h2>
-            </div>
-            <div className="p-6 sm:p-10 space-y-6">
-              <p className="text-lg text-slate-600 font-medium leading-relaxed">
-                {selectedBlog.short}
-              </p>
-              <div className="h-px bg-slate-100 w-full"></div>
-              <div className="prose prose-slate max-w-none text-slate-600 leading-loose whitespace-pre-wrap">
-                {selectedBlog.content}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </Router>
   );
 }
