@@ -25,7 +25,9 @@ const connectDB = async () => {
     console.log('✅  Supabase PostgreSQL connected successfully.');
   } catch (error) {
     console.error('❌  Supabase connection error:', error.message);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
 };
 
