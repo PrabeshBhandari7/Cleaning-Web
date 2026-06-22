@@ -30,4 +30,23 @@ api.interceptors.request.use(
   }
 );
 
+// Add a response interceptor to catch network errors globally and resolve API errors 
+// so the existing codebase's `if (data.success)` logic still works without throwing.
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      // The server responded with a status code outside the 2xx range
+      // Resolve it so the components can handle the structured error in `res.data`
+      return Promise.resolve(error.response);
+    } else if (error.request) {
+      // The request was made but no response was received (Network error)
+      return Promise.reject(new Error('Network error. Please check your connection.'));
+    } else {
+      // Something else caused the error
+      return Promise.reject(new Error(error.message));
+    }
+  }
+);
+
 export default api;

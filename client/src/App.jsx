@@ -568,12 +568,12 @@ function App() {
       const mockPass = import.meta.env.VITE_ADMIN_MOCK_PASS;
       
       if (mockUser && mockPass && username === mockUser && password === mockPass) {
-        _adminJwt = 'mock-jwt-token';
+        setAdminToken('mock-jwt-token');
         setIsAdminLoggedIn(true);
         setAdminError('');
         return true;
       } else {
-        setAdminError('Network error. Please check your connection.');
+        setAdminError(err.message || 'Network error. Please check your connection.');
         return false;
       }
     }
