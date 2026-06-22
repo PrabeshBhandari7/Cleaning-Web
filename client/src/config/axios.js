@@ -3,10 +3,19 @@ import axios from 'axios';
 let _adminJwt = null;
 
 const getBaseUrl = () => {
+  // If VITE_API_URL is provided during build, use it (this points to Railway or another backend)
+  if (import.meta.env.VITE_API_URL) {
+    // Prevent accidentally using localhost in production build if user forgot to change .env
+    if (import.meta.env.PROD && import.meta.env.VITE_API_URL.includes('localhost')) {
+      return 'https://platinumsmilecleaning.com/api';
+    }
+    return import.meta.env.VITE_API_URL;
+  }
+  
   if (import.meta.env.PROD) {
     return 'https://platinumsmilecleaning.com/api';
   }
-  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  return 'http://localhost:5000/api';
 };
 
 const api = axios.create({
