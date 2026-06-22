@@ -171,13 +171,18 @@ let server;
 (async () => {
   try {
     await connectDB();
-    server = app.listen(PORT, () => {
-      console.log(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
-      console.log(`🔒 Security: Helmet, CORS, Rate-Limiting, HPP, Body-Size limits, JWT Auth active`);
-    });
+    // Only listen if not running on Vercel serverless environment
+    if (!process.env.VERCEL) {
+      server = app.listen(PORT, () => {
+        console.log(`🚀 Server running in ${NODE_ENV} mode on port ${PORT}`);
+        console.log(`🔒 Security: Helmet, CORS, Rate-Limiting, HPP, Body-Size limits, JWT Auth active`);
+      });
+    }
   } catch (err) {
     console.error('❌ Failed to connect to database. Server not started.', err.message);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
 })();
 
