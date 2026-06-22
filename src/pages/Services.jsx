@@ -80,7 +80,7 @@ export default function Services({ services, formatPrice, setFormData, setFormHi
                     </div>
                     <h3 className="font-display font-bold text-lg sm:text-xl">{service.title}</h3>
                     <p className="text-[11px] text-slate-300 max-w-[18rem] line-clamp-1 group-hover:line-clamp-none transition-all mt-1">
-                      {service.desc}
+                      {service.description}
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-2">
