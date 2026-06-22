@@ -14,6 +14,7 @@ export default function Contact({
   setFormData,
   formatPrice,
   nameInputRef,
+  isSubmitting,
 }) {
   const [captchaA, setCaptchaA] = useState(0);
   const [captchaB, setCaptchaB] = useState(0);
@@ -348,9 +349,14 @@ export default function Contact({
               <div className="flex justify-end pt-4 border-t border-slate-100">
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-10 py-3.5 rounded-xl font-bold bg-brand-orange text-white hover:bg-brand-orange-hover hover:scale-[1.02] active:scale-[0.98] transition-all shadow-md shadow-brand-orange/20"
+                  disabled={isSubmitting}
+                  className={`w-full sm:w-auto px-10 py-3.5 rounded-xl font-bold text-white transition-all shadow-md ${
+                    isSubmitting 
+                      ? 'bg-slate-400 cursor-not-allowed' 
+                      : 'bg-brand-orange hover:bg-brand-orange-hover hover:scale-[1.02] active:scale-[0.98] shadow-brand-orange/20'
+                  }`}
                 >
-                  Send Request
+                  {isSubmitting ? 'Sending Request...' : 'Send Request'}
                 </button>
               </div>
             </form>
