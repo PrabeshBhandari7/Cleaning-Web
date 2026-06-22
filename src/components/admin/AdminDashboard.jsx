@@ -6,6 +6,7 @@ import ServicesTab from './ServicesTab';
 import AddServiceTab from './AddServiceTab';
 import BookingsTab from './BookingsTab';
 import RatesTab from './RatesTab';
+import SettingsTab from './SettingsTab';
 
 export default function AdminDashboard({
   onClose,
@@ -36,6 +37,7 @@ export default function AdminDashboard({
   fileInputRef,
   onPhotoUpload,
   onAddServiceSubmit,
+  getAdminHeaders,
 }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -99,6 +101,7 @@ export default function AdminDashboard({
               {activeTab === 'bookings' && 'Bookings'}
               {activeTab === 'rates' && 'Rates'}
               {activeTab === 'add-service' && 'Add Listing'}
+              {activeTab === 'settings' && 'Settings'}
             </span>
           </div>
 
@@ -156,6 +159,10 @@ export default function AdminDashboard({
               onPhotoUpload={onPhotoUpload}
               onSubmit={onAddServiceSubmit}
             />
+          )}
+
+          {activeTab === 'settings' && (
+            <SettingsTab getAdminHeaders={getAdminHeaders} onLogout={onLogout} />
           )}
         </div>
 
