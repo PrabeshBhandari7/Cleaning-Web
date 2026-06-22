@@ -28,7 +28,7 @@ import {
 // EmailJS removed in favor of backend Nodemailer
 
 // API base URL — single source of truth
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://platinumsmilecleaning.com/api' : 'http://localhost:5000/api');
 
 // In-memory JWT store (NOT localStorage — prevents XSS token theft)
 // The token is lost on page refresh, requiring the admin to log in again (intentional)
