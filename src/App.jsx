@@ -25,7 +25,7 @@ import {
   Zap,
 } from 'lucide-react';
 
-import { sendBookingNotification } from './services/emailService';
+// EmailJS removed in favor of backend Nodemailer
 
 // API base URL — single source of truth
 const API_BASE = 'http://localhost:5000/api';
@@ -429,7 +429,7 @@ function App() {
     if (formData.propertyType === 'warehouse') sizeMultiplier = 2.5;
 
     let base = basePrice * sizeMultiplier;
-    
+
     // Calculate addons
     if (formData.addons && formData.addons.length > 0) {
       if (formData.addons.includes('fridge')) base += 50;
@@ -510,13 +510,7 @@ function App() {
         setPlacedBookingDetails(details);
         setBookingPlaced(true);
 
-        // Dispatch EmailJS email notification
-        try {
-          await sendBookingNotification(details);
-        } catch (emailErr) {
-          console.error('Email notification failed to dispatch:', emailErr);
-        }
-
+        // Backend now handles the email notification automatically.
         fetchBookings(); // sync state in admin panel
       } else {
         alert(data.message || 'Failed to register your quote.');
@@ -584,8 +578,11 @@ function App() {
         setAdminError(data.message || 'Invalid credentials. Authorized Admin only.');
       }
     } catch (err) {
-      // Fallback for offline/demo mode
-      if (username === 'admin' && password === 'admin123') {
+      // Fallback for offline/demo mode using env variables
+      const mockUser = import.meta.env.VITE_ADMIN_MOCK_USER;
+      const mockPass = import.meta.env.VITE_ADMIN_MOCK_PASS;
+      
+      if (mockUser && mockPass && username === mockUser && password === mockPass) {
         _adminJwt = 'mock-jwt-token';
         setIsAdminLoggedIn(true);
         setShowAdminLogin(false);
@@ -626,7 +623,7 @@ function App() {
     const serviceType = servicesList[Math.floor(Math.random() * servicesList.length)] || 'deep';
     const randomPrice = Math.floor(Math.random() * 300) + 100;
     const date = `2026-06-${Math.floor(Math.random() * 10) + 20}`;
-    
+
     try {
       const res = await fetch('http://localhost:5000/api/bookings', {
         method: 'POST',
@@ -903,7 +900,7 @@ function App() {
     <Router>
       <Routes>
         <Route element={
-          <Layout 
+          <Layout
             CleanLogo={CleanLogo}
             handleLogoClick={handleLogoClick}
             isAdminLoggedIn={isAdminLoggedIn}
@@ -927,7 +924,7 @@ function App() {
 
       {/* Admin Login Modal */}
       {showAdminLogin && (
-        <AdminLogin 
+        <AdminLogin
           onSubmit={handleAdminLoginSubmit}
           onCancel={() => {
             setShowAdminLogin(false);
@@ -969,13 +966,14 @@ function App() {
           fileInputRef={fileInputRef}
           onPhotoUpload={handlePhotoUpload}
           onAddServiceSubmit={handleAddServiceSubmit}
+          getAdminHeaders={getAdminHeaders}
         />
       )}
 
       {/* Blog Detail Overlay Modal */}
       {selectedBlog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-          <div 
+          <div
             className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => setSelectedBlog(null)}
           ></div>
