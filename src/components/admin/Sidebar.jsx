@@ -8,10 +8,9 @@ import {
   X,
   Settings
 } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Sidebar({ 
-  activeTab, 
-  setActiveTab, 
   onLogout, 
   onClose, 
   currency, 
@@ -19,6 +18,9 @@ export default function Sidebar({
   mobileOpen,
   onCloseMobile
 }) {
+  const location = useLocation();
+  const pathSegments = location.pathname.split('/');
+  const activeTab = pathSegments[pathSegments.length - 1] || 'overview';
   const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: LayoutGrid },
     { id: 'services', label: 'Listings', icon: ListTodo },
@@ -71,10 +73,10 @@ export default function Sidebar({
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
                 return (
-                  <button
+                  <Link
                     key={item.id}
+                    to={`/admin/dashboard/${item.id}`}
                     onClick={() => {
-                      setActiveTab(item.id);
                       if (onCloseMobile) onCloseMobile();
                     }}
                     className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl transition-all text-left cursor-pointer ${
@@ -85,7 +87,7 @@ export default function Sidebar({
                   >
                     <Icon className={`w-4.5 h-4.5 ${isActive ? 'text-brand-green' : 'text-slate-400'}`} />
                     <span>{item.label}</span>
-                  </button>
+                  </Link>
                 );
               })}
             </nav>
@@ -158,10 +160,11 @@ export default function Sidebar({
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
-            <button
+            <Link
               key={item.id}
+              to={`/admin/dashboard/${item.id}`}
               onClick={() => {
-                setActiveTab(item.id);
+                if (onCloseMobile) onCloseMobile();
               }}
               className="flex flex-col items-center justify-center gap-1 flex-1 py-1 text-center cursor-pointer"
             >
@@ -171,7 +174,7 @@ export default function Sidebar({
               <span className={`text-[9px] font-bold ${isActive ? 'text-brand-green' : 'text-slate-400'}`}>
                 {item.label}
               </span>
-            </button>
+            </Link>
           );
         })}
         {/* Mobile Exit Button */}
