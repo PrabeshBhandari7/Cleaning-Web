@@ -1,8 +1,9 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-export default function Blogs({ blogList, setSelectedBlog }) {
+export default function Blogs({ blogList }) {
   return (
     <>
       <Helmet>
@@ -39,12 +40,13 @@ export default function Blogs({ blogList, setSelectedBlog }) {
                 </div>
               </div>
               <div className="px-6 pb-6 pt-2">
-                <button
-                  onClick={() => setSelectedBlog(blog)}
+                <Link
+                  to={`/blogs/${blog.id}`}
+                  onClick={() => window.scrollTo(0, 0)}
                   className="inline-flex items-center gap-1 text-xs font-bold text-brand-orange hover:text-brand-orange-hover cursor-pointer"
                 >
                   Read Full Article <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+                </Link>
               </div>
             </div>
           ))}

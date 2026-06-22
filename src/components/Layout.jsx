@@ -7,8 +7,6 @@ export default function Layout({
   CleanLogo,
   handleLogoClick,
   isAdminLoggedIn,
-  setShowAdminDashboard,
-  setShowAdminLogin,
   currency,
   setCurrency,
   mobileMenuOpen,
@@ -19,6 +17,7 @@ export default function Layout({
 
   const handleNavClick = () => {
     setMobileMenuOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleServiceClick = (serviceId) => {
@@ -47,25 +46,26 @@ export default function Layout({
 
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-500">
-            <Link to="/" className="hover:text-brand-green transition-colors">
+            <Link to="/" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-green transition-colors">
               Home
             </Link>
-            <Link to="/services" className="hover:text-brand-green transition-colors">
+            <Link to="/services" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-green transition-colors">
               Services
             </Link>
-            <Link to="/about" className="hover:text-brand-green transition-colors">
+            <Link to="/about" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-green transition-colors">
               About Us
             </Link>
-            <Link to="/blogs" className="hover:text-brand-green transition-colors">
+            <Link to="/blogs" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-green transition-colors">
               Clean Living
             </Link>
             {isAdminLoggedIn && (
-              <button
-                onClick={() => setShowAdminDashboard(true)}
+              <Link
+                to="/admin/dashboard"
+                onClick={() => window.scrollTo(0,0)}
                 className="text-xs font-bold text-brand-orange bg-brand-orange/10 px-2.5 py-1 rounded-md border border-brand-orange/20 animate-pulse hover:bg-brand-orange hover:text-white transition-all cursor-pointer"
               >
                 Admin Panel
-              </button>
+              </Link>
             )}
           </nav>
 
@@ -130,15 +130,13 @@ export default function Layout({
                 Clean Living
               </Link>
               {isAdminLoggedIn && (
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setShowAdminDashboard(true);
-                  }}
-                  className="py-2 border-t border-slate-100 text-left font-bold text-brand-orange cursor-pointer animate-pulse"
+                <Link
+                  to="/admin/dashboard"
+                  onClick={handleNavClick}
+                  className="py-2 border-t border-slate-100 text-left font-bold text-brand-orange cursor-pointer animate-pulse block w-full"
                 >
                   Admin Control Panel
-                </button>
+                </Link>
               )}
             </nav>
             <div className="flex gap-2">
@@ -225,6 +223,7 @@ export default function Layout({
                 <li key={s.id}>
                   <Link
                     to="/services"
+                    onClick={() => window.scrollTo(0,0)}
                     className="hover:text-brand-orange transition-colors"
                   >
                     {s.title}
@@ -241,27 +240,27 @@ export default function Layout({
             </h4>
             <ul className="space-y-3 text-xs font-semibold">
               <li>
-                <Link to="/contact" className="hover:text-brand-orange transition-colors">
+                <Link to="/contact" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-orange transition-colors">
                   Dubai, UAE
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="hover:text-brand-orange transition-colors">
+                <Link to="/services" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-orange transition-colors">
                   Residential Homes
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="hover:text-brand-orange transition-colors">
+                <Link to="/services" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-orange transition-colors">
                   Commercial Buildings
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="hover:text-brand-orange transition-colors">
+                <Link to="/services" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-orange transition-colors">
                   Warehouses & Offices
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="hover:text-brand-orange transition-colors">
+                <Link to="/services" onClick={() => window.scrollTo(0,0)} className="hover:text-brand-orange transition-colors">
                   Villas & Apartments
                 </Link>
               </li>
@@ -303,12 +302,13 @@ export default function Layout({
               www.platinumsmilecleaning.com
             </a>
             {isAdminLoggedIn && (
-              <button
-                onClick={() => setShowAdminDashboard(true)}
-                className="hover:text-slate-600 transition-colors cursor-pointer text-[10px] font-bold uppercase tracking-wider bg-transparent border-none p-0"
+              <Link
+                to="/admin/dashboard"
+                onClick={() => window.scrollTo(0,0)}
+                className="hover:text-slate-600 transition-colors cursor-pointer text-[10px] font-bold uppercase tracking-wider bg-transparent border-none p-0 block"
               >
                 Admin Portal
-              </button>
+              </Link>
             )}
           </div>
         </div>
