@@ -5,7 +5,8 @@ import {
   Coins, 
   LogOut,
   Sparkles,
-  X
+  X,
+  Settings
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -23,6 +24,7 @@ export default function Sidebar({
     { id: 'services', label: 'Listings', icon: ListTodo },
     { id: 'bookings', label: 'Bookings', icon: CalendarDays },
     { id: 'rates', label: 'Rates', icon: Coins },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (
