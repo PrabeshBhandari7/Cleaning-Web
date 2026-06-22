@@ -80,6 +80,18 @@ exports.getBookings = async (req, res) => {
   }
 };
 
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  host: 'mail.privateemail.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  }
+});
+
 // @desc    Create new booking
 // @route   POST /api/bookings
 // @access  Public
@@ -116,6 +128,27 @@ exports.createBooking = async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // Send email via Namecheap asynchronously
+    transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,   // sends to yourself
+      subject: '🗓️ New Booking Request!',
+      html: `
+        <h2 style="color: #333;">New Booking Received!</h2>
+        <table border="1" cellpadding="8" style="border-collapse: collapse;">
+          <tr><td><b>Name</b></td><td>${data.name}</td></tr>
+          <tr><td><b>Email</b></td><td>${data.email}</td></tr>
+          <tr><td><b>Phone</b></td><td>${data.phone}</td></tr>
+          <tr><td><b>Service</b></td><td>${data.service_type}</td></tr>
+          <tr><td><b>Total Price</b></td><td>$${data.total_price}</td></tr>
+          <tr><td><b>Date</b></td><td>${data.date}</td></tr>
+          <tr><td><b>Message</b></td><td>${data.message || 'N/A'}</td></tr>
+        </table>
+      `
+    })
+    .then(() => console.log('Booking email sent successfully via Namecheap.'))
+    .catch((emailError) => console.error('Failed to send booking email:', emailError));
 
     res.status(201).json({ success: true, data: mapBooking(data) });
   } catch (error) {
